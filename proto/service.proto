@@ -3,23 +3,38 @@ syntax = "proto3";
 package proto;
 option go_package = "starbit/proto";
 
-// Game service for tick-based updates
 service Game {
-  // Send a message to the server
-  rpc SendMessage (GameMessage) returns (Empty) {}
-  // Subscribe to tick updates
+  rpc JoinGame (JoinRequest) returns (Empty) {}
   rpc SubscribeToTicks (Empty) returns (stream TickUpdate) {}
 }
 
-// Empty message for requests that don't need data
 message Empty {}
 
-// Message sent by clients
-message GameMessage {
-  string content = 1;
+message JoinRequest {
+  string username = 1;
 }
 
-// Tick update sent by server
+message Player {
+  string id = 1;
+  string name = 2;
+}
+
+message System {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message GalaxyState {
+  repeated System systems = 1;
+}
+
+message GameState {
+  int32 player_count = 1;
+  repeated Player players = 2;
+  GalaxyState galaxy = 3;
+  bool game_started = 4;
+}
+
 message TickUpdate {
-  int32 message_count = 1;
+  GameState State = 1;
 } 

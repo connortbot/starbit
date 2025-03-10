@@ -21,97 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// The request message containing the user's name
-type HelloRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *HelloRequest) Reset() {
-	*x = HelloRequest{}
-	mi := &file_proto_service_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *HelloRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HelloRequest) ProtoMessage() {}
-
-func (x *HelloRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HelloRequest.ProtoReflect.Descriptor instead.
-func (*HelloRequest) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *HelloRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-// The response message containing the greetings
-type HelloResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *HelloResponse) Reset() {
-	*x = HelloResponse{}
-	mi := &file_proto_service_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *HelloResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HelloResponse) ProtoMessage() {}
-
-func (x *HelloResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HelloResponse.ProtoReflect.Descriptor instead.
-func (*HelloResponse) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *HelloResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-// Empty message for requests that don't need data
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -120,7 +29,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_proto_service_proto_msgTypes[2]
+	mi := &file_proto_service_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -132,7 +41,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[2]
+	mi := &file_proto_service_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -145,31 +54,127 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{2}
+	return file_proto_service_proto_rawDescGZIP(), []int{0}
 }
 
-// Message sent by clients
-type GameMessage struct {
+type JoinRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GameMessage) Reset() {
-	*x = GameMessage{}
+func (x *JoinRequest) Reset() {
+	*x = JoinRequest{}
+	mi := &file_proto_service_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinRequest) ProtoMessage() {}
+
+func (x *JoinRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_service_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinRequest.ProtoReflect.Descriptor instead.
+func (*JoinRequest) Descriptor() ([]byte, []int) {
+	return file_proto_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *JoinRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+type Player struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Player) Reset() {
+	*x = Player{}
+	mi := &file_proto_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Player) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Player) ProtoMessage() {}
+
+func (x *Player) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Player.ProtoReflect.Descriptor instead.
+func (*Player) Descriptor() ([]byte, []int) {
+	return file_proto_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Player) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Player) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type System struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *System) Reset() {
+	*x = System{}
 	mi := &file_proto_service_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GameMessage) String() string {
+func (x *System) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GameMessage) ProtoMessage() {}
+func (*System) ProtoMessage() {}
 
-func (x *GameMessage) ProtoReflect() protoreflect.Message {
+func (x *System) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_service_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -181,29 +186,147 @@ func (x *GameMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GameMessage.ProtoReflect.Descriptor instead.
-func (*GameMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use System.ProtoReflect.Descriptor instead.
+func (*System) Descriptor() ([]byte, []int) {
 	return file_proto_service_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GameMessage) GetContent() string {
+func (x *System) GetX() int32 {
 	if x != nil {
-		return x.Content
+		return x.X
 	}
-	return ""
+	return 0
 }
 
-// Tick update sent by server
+func (x *System) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+type GalaxyState struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Systems       []*System              `protobuf:"bytes,1,rep,name=systems,proto3" json:"systems,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GalaxyState) Reset() {
+	*x = GalaxyState{}
+	mi := &file_proto_service_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GalaxyState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GalaxyState) ProtoMessage() {}
+
+func (x *GalaxyState) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_service_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GalaxyState.ProtoReflect.Descriptor instead.
+func (*GalaxyState) Descriptor() ([]byte, []int) {
+	return file_proto_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GalaxyState) GetSystems() []*System {
+	if x != nil {
+		return x.Systems
+	}
+	return nil
+}
+
+type GameState struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlayerCount   int32                  `protobuf:"varint,1,opt,name=player_count,json=playerCount,proto3" json:"player_count,omitempty"`
+	Players       []*Player              `protobuf:"bytes,2,rep,name=players,proto3" json:"players,omitempty"`
+	Galaxy        *GalaxyState           `protobuf:"bytes,3,opt,name=galaxy,proto3" json:"galaxy,omitempty"`
+	GameStarted   bool                   `protobuf:"varint,4,opt,name=game_started,json=gameStarted,proto3" json:"game_started,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GameState) Reset() {
+	*x = GameState{}
+	mi := &file_proto_service_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GameState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GameState) ProtoMessage() {}
+
+func (x *GameState) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_service_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GameState.ProtoReflect.Descriptor instead.
+func (*GameState) Descriptor() ([]byte, []int) {
+	return file_proto_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GameState) GetPlayerCount() int32 {
+	if x != nil {
+		return x.PlayerCount
+	}
+	return 0
+}
+
+func (x *GameState) GetPlayers() []*Player {
+	if x != nil {
+		return x.Players
+	}
+	return nil
+}
+
+func (x *GameState) GetGalaxy() *GalaxyState {
+	if x != nil {
+		return x.Galaxy
+	}
+	return nil
+}
+
+func (x *GameState) GetGameStarted() bool {
+	if x != nil {
+		return x.GameStarted
+	}
+	return false
+}
+
 type TickUpdate struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MessageCount  int32                  `protobuf:"varint,1,opt,name=message_count,json=messageCount,proto3" json:"message_count,omitempty"`
+	State         *GameState             `protobuf:"bytes,1,opt,name=State,proto3" json:"State,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TickUpdate) Reset() {
 	*x = TickUpdate{}
-	mi := &file_proto_service_proto_msgTypes[4]
+	mi := &file_proto_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -215,7 +338,7 @@ func (x *TickUpdate) String() string {
 func (*TickUpdate) ProtoMessage() {}
 
 func (x *TickUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[4]
+	mi := &file_proto_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -228,46 +351,56 @@ func (x *TickUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TickUpdate.ProtoReflect.Descriptor instead.
 func (*TickUpdate) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{4}
+	return file_proto_service_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *TickUpdate) GetMessageCount() int32 {
+func (x *TickUpdate) GetState() *GameState {
 	if x != nil {
-		return x.MessageCount
+		return x.State
 	}
-	return 0
+	return nil
 }
 
 var File_proto_service_proto protoreflect.FileDescriptor
 
 var file_proto_service_proto_rawDesc = string([]byte{
 	0x0a, 0x13, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x22, 0x0a, 0x0c,
-	0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x22, 0x29, 0x0a, 0x0d, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x07, 0x0a, 0x05, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x22, 0x27, 0x0a, 0x0b, 0x47, 0x61, 0x6d, 0x65, 0x4d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0x31, 0x0a,
-	0x0a, 0x54, 0x69, 0x63, 0x6b, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x6d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x05, 0x52, 0x0c, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74,
-	0x32, 0x42, 0x0a, 0x07, 0x47, 0x72, 0x65, 0x65, 0x74, 0x65, 0x72, 0x12, 0x37, 0x0a, 0x08, 0x53,
-	0x61, 0x79, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x12, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
-	0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x32, 0x72, 0x0a, 0x04, 0x47, 0x61, 0x6d, 0x65, 0x12, 0x31, 0x0a, 0x0b,
-	0x53, 0x65, 0x6e, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x12, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2e, 0x47, 0x61, 0x6d, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a,
-	0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12,
-	0x37, 0x0a, 0x10, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x54, 0x6f, 0x54, 0x69,
-	0x63, 0x6b, 0x73, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74,
-	0x79, 0x1a, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x54, 0x69, 0x63, 0x6b, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x22, 0x00, 0x30, 0x01, 0x42, 0x0f, 0x5a, 0x0d, 0x73, 0x74, 0x61, 0x72,
-	0x62, 0x69, 0x74, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x07, 0x0a, 0x05,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x29, 0x0a, 0x0b, 0x4a, 0x6f, 0x69, 0x6e, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65,
+	0x22, 0x2c, 0x0a, 0x06, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61,
+	0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x24,
+	0x0a, 0x06, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x05, 0x52, 0x01, 0x78, 0x12, 0x0c, 0x0a, 0x01, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x01, 0x79, 0x22, 0x36, 0x0a, 0x0b, 0x47, 0x61, 0x6c, 0x61, 0x78, 0x79, 0x53, 0x74,
+	0x61, 0x74, 0x65, 0x12, 0x27, 0x0a, 0x07, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x79, 0x73,
+	0x74, 0x65, 0x6d, 0x52, 0x07, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x73, 0x22, 0xa6, 0x01, 0x0a,
+	0x09, 0x47, 0x61, 0x6d, 0x65, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x70, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x0b, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x27, 0x0a,
+	0x07, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0d,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x52, 0x07, 0x70,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x73, 0x12, 0x2a, 0x0a, 0x06, 0x67, 0x61, 0x6c, 0x61, 0x78, 0x79,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x47,
+	0x61, 0x6c, 0x61, 0x78, 0x79, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x06, 0x67, 0x61, 0x6c, 0x61,
+	0x78, 0x79, 0x12, 0x21, 0x0a, 0x0c, 0x67, 0x61, 0x6d, 0x65, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74,
+	0x65, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0b, 0x67, 0x61, 0x6d, 0x65, 0x53, 0x74,
+	0x61, 0x72, 0x74, 0x65, 0x64, 0x22, 0x34, 0x0a, 0x0a, 0x54, 0x69, 0x63, 0x6b, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x12, 0x26, 0x0a, 0x05, 0x53, 0x74, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x47, 0x61, 0x6d, 0x65, 0x53,
+	0x74, 0x61, 0x74, 0x65, 0x52, 0x05, 0x53, 0x74, 0x61, 0x74, 0x65, 0x32, 0x6f, 0x0a, 0x04, 0x47,
+	0x61, 0x6d, 0x65, 0x12, 0x2e, 0x0a, 0x08, 0x4a, 0x6f, 0x69, 0x6e, 0x47, 0x61, 0x6d, 0x65, 0x12,
+	0x12, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4a, 0x6f, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74,
+	0x79, 0x22, 0x00, 0x12, 0x37, 0x0a, 0x10, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65,
+	0x54, 0x6f, 0x54, 0x69, 0x63, 0x6b, 0x73, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x54, 0x69,
+	0x63, 0x6b, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x22, 0x00, 0x30, 0x01, 0x42, 0x0f, 0x5a, 0x0d,
+	0x73, 0x74, 0x61, 0x72, 0x62, 0x69, 0x74, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -282,26 +415,30 @@ func file_proto_service_proto_rawDescGZIP() []byte {
 	return file_proto_service_proto_rawDescData
 }
 
-var file_proto_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_proto_service_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_proto_service_proto_goTypes = []any{
-	(*HelloRequest)(nil),  // 0: proto.HelloRequest
-	(*HelloResponse)(nil), // 1: proto.HelloResponse
-	(*Empty)(nil),         // 2: proto.Empty
-	(*GameMessage)(nil),   // 3: proto.GameMessage
-	(*TickUpdate)(nil),    // 4: proto.TickUpdate
+	(*Empty)(nil),       // 0: proto.Empty
+	(*JoinRequest)(nil), // 1: proto.JoinRequest
+	(*Player)(nil),      // 2: proto.Player
+	(*System)(nil),      // 3: proto.System
+	(*GalaxyState)(nil), // 4: proto.GalaxyState
+	(*GameState)(nil),   // 5: proto.GameState
+	(*TickUpdate)(nil),  // 6: proto.TickUpdate
 }
 var file_proto_service_proto_depIdxs = []int32{
-	0, // 0: proto.Greeter.SayHello:input_type -> proto.HelloRequest
-	3, // 1: proto.Game.SendMessage:input_type -> proto.GameMessage
-	2, // 2: proto.Game.SubscribeToTicks:input_type -> proto.Empty
-	1, // 3: proto.Greeter.SayHello:output_type -> proto.HelloResponse
-	2, // 4: proto.Game.SendMessage:output_type -> proto.Empty
-	4, // 5: proto.Game.SubscribeToTicks:output_type -> proto.TickUpdate
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: proto.GalaxyState.systems:type_name -> proto.System
+	2, // 1: proto.GameState.players:type_name -> proto.Player
+	4, // 2: proto.GameState.galaxy:type_name -> proto.GalaxyState
+	5, // 3: proto.TickUpdate.State:type_name -> proto.GameState
+	1, // 4: proto.Game.JoinGame:input_type -> proto.JoinRequest
+	0, // 5: proto.Game.SubscribeToTicks:input_type -> proto.Empty
+	0, // 6: proto.Game.JoinGame:output_type -> proto.Empty
+	6, // 7: proto.Game.SubscribeToTicks:output_type -> proto.TickUpdate
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_proto_service_proto_init() }
@@ -315,9 +452,9 @@ func file_proto_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_service_proto_rawDesc), len(file_proto_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
-			NumServices:   2,
+			NumServices:   1,
 		},
 		GoTypes:           file_proto_service_proto_goTypes,
 		DependencyIndexes: file_proto_service_proto_depIdxs,

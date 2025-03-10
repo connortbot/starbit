@@ -14,7 +14,7 @@ This explains the process of `starbit`, implementation along the way. (kinda a C
 
 ## First Game Version
 `starbit` takes 2-4 players per game. 
-Each Player controls an respective Empire in a tiny, randomly-generated Galaxy. The Galaxy is made up of a grid of Systems (though the grid is circle-shaped). 
+Each Player controls an respective Empire in a tiny, randomly-generated Galaxy. The Galaxy is made up of a grid of Systems. 
 
 A Player wins by getting control over the entire Galaxy.
 
@@ -60,3 +60,7 @@ Players must create Convoys. Each Convoy is able to 'supply' an amount of GES.
 > Its important to note that Fixed costs (building Ships and Factories) don't contribute to Variable Costs (maintenance GES/tick)
 
 Players can build an infinite amount of Factories. They are not located in Systems.
+
+
+## Beginning
+Started by creating a `gRPC` simple game service, where a server can send ticks every 5 seconds and clients can freely send messages.
