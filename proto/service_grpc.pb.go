@@ -27,8 +27,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GameClient interface {
-	JoinGame(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*Empty, error)
-	SubscribeToTicks(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TickUpdate], error)
+	JoinGame(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
+	SubscribeToTicks(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TickUpdate], error)
 }
 
 type gameClient struct {
@@ -39,9 +39,9 @@ func NewGameClient(cc grpc.ClientConnInterface) GameClient {
 	return &gameClient{cc}
 }
 
-func (c *gameClient) JoinGame(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gameClient) JoinGame(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
+	out := new(JoinResponse)
 	err := c.cc.Invoke(ctx, Game_JoinGame_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -49,13 +49,13 @@ func (c *gameClient) JoinGame(ctx context.Context, in *JoinRequest, opts ...grpc
 	return out, nil
 }
 
-func (c *gameClient) SubscribeToTicks(ctx context.Context, in *Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TickUpdate], error) {
+func (c *gameClient) SubscribeToTicks(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TickUpdate], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Game_ServiceDesc.Streams[0], Game_SubscribeToTicks_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Empty, TickUpdate]{ClientStream: stream}
+	x := &grpc.GenericClientStream[SubscribeRequest, TickUpdate]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ type Game_SubscribeToTicksClient = grpc.ServerStreamingClient[TickUpdate]
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
 type GameServer interface {
-	JoinGame(context.Context, *JoinRequest) (*Empty, error)
-	SubscribeToTicks(*Empty, grpc.ServerStreamingServer[TickUpdate]) error
+	JoinGame(context.Context, *JoinRequest) (*JoinResponse, error)
+	SubscribeToTicks(*SubscribeRequest, grpc.ServerStreamingServer[TickUpdate]) error
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -84,10 +84,10 @@ type GameServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGameServer struct{}
 
-func (UnimplementedGameServer) JoinGame(context.Context, *JoinRequest) (*Empty, error) {
+func (UnimplementedGameServer) JoinGame(context.Context, *JoinRequest) (*JoinResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinGame not implemented")
 }
-func (UnimplementedGameServer) SubscribeToTicks(*Empty, grpc.ServerStreamingServer[TickUpdate]) error {
+func (UnimplementedGameServer) SubscribeToTicks(*SubscribeRequest, grpc.ServerStreamingServer[TickUpdate]) error {
 	return status.Errorf(codes.Unimplemented, "method SubscribeToTicks not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
@@ -130,11 +130,11 @@ func _Game_JoinGame_Handler(srv interface{}, ctx context.Context, dec func(inter
 }
 
 func _Game_SubscribeToTicks_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Empty)
+	m := new(SubscribeRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(GameServer).SubscribeToTicks(m, &grpc.GenericServerStream[Empty, TickUpdate]{ServerStream: stream})
+	return srv.(GameServer).SubscribeToTicks(m, &grpc.GenericServerStream[SubscribeRequest, TickUpdate]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.

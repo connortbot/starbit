@@ -1,17 +1,15 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"io"
 	"log"
 	"os"
 
+	"starbit/client/game"
+	ui "starbit/client/ui"
 	pb "starbit/proto"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var debugLog *log.Logger
@@ -29,28 +27,15 @@ func init() {
 	}
 }
 
-func main() {
-	p := tea.NewProgram(initialModel())
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error: %v", err)
-		os.Exit(1)
-	}
-}
-
 type model struct {
-	grpcConn   *grpc.ClientConn
-	gameClient pb.GameClient
-	stream     pb.Game_SubscribeToTicksClient
-	name       string
-	nameInput  string
-	state      string
-	err        error
-}
-
-func initialModel() model {
-	return model{
-		state: "asking_name",
-	}
+	username    string
+	err         error
+	client      *game.Client
+	started     bool
+	playerCount int32
+	players     map[string]*pb.Player
+	tickChan    chan game.TickMsg
+	joined      bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -61,116 +46,95 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "enter":
-			if m.state == "asking_name" && m.nameInput != "" {
-				m.name = m.nameInput
-				m.state = "connecting"
-				return m, connect()
-			}
 		case "ctrl+c":
+			if m.client != nil {
+				m.client.Close()
+			}
 			return m, tea.Quit
+		case "enter":
+			if m.username != "" && !m.started {
+				client := game.NewClient()
+				if err := client.Connect(); err != nil {
+					m.err = err
+					return m, nil
+				}
+				if err := client.SubscribeToTicks(m.username); err != nil {
+					client.Close()
+					m.err = err
+					return m, nil
+				}
+				m.client = client
+				m.tickChan = make(chan game.TickMsg)
+				go handleTicks(client, m.tickChan)
+				resp, err := client.JoinGame(m.username)
+				if err != nil {
+					client.Close()
+					m.err = err
+					return m, nil
+				}
+				m.joined = true
+				m.playerCount = resp.PlayerCount
+				m.players = resp.Players
+				m.started = resp.Started
+				return m, waitForTicks(m.tickChan)
+			}
+		case "backspace":
+			if len(m.username) > 0 && !m.started {
+				m.username = m.username[:len(m.username)-1]
+			}
 		default:
-			if m.state == "asking_name" && len(msg.String()) == 1 {
-				m.nameInput += msg.String()
+			if len(msg.String()) == 1 && !m.started {
+				m.username += msg.String()
 			}
 		}
-	case errorMsg:
-		m.err = msg
-		m.state = "error"
-	case connectedMsg:
-		m.grpcConn = msg.conn
-		m.gameClient = msg.client
-		m.stream = msg.stream
-		m.state = "joining"
-		return m, m.joinGame()
-	case joinedMsg:
-		m.state = "connected"
-		go m.handleTicks()
+	case game.TickMsg:
+		m.playerCount = msg.PlayerCount
+		m.started = msg.Started
+		m.players = msg.Players
+		return m, waitForTicks(m.tickChan)
 	}
 	return m, nil
 }
 
 func (m model) View() string {
-	switch m.state {
-	case "asking_name":
-		return fmt.Sprintf("Enter your name: %s\n", m.nameInput)
-	case "connecting":
-		return "Connecting to server...\n"
-	case "joining":
-		return "Joining game...\n"
-	case "error":
-		return fmt.Sprintf("Error: %v\nPress Ctrl+C to quit", m.err)
-	case "connected":
-		return fmt.Sprintf("Connected as: %s\nWaiting for players...\nPress Ctrl+C to quit", m.name)
-	default:
-		return "Unknown state\n"
+	if m.err != nil {
+		return fmt.Sprintf("Error: %v\nPress Ctrl+C to quit\n", m.err)
 	}
-}
-
-type errorMsg struct{ err error }
-
-func (e errorMsg) Error() string {
-	return e.err.Error()
-}
-
-type connectedMsg struct {
-	conn   *grpc.ClientConn
-	client pb.GameClient
-	stream pb.Game_SubscribeToTicksClient
-}
-
-type joinedMsg struct{}
-
-func connect() tea.Cmd {
-	return func() tea.Msg {
-		conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			return errorMsg{err}
-		}
-
-		gameClient := pb.NewGameClient(conn)
-		stream, err := gameClient.SubscribeToTicks(context.Background(), &pb.Empty{})
-		if err != nil {
-			return errorMsg{err}
-		}
-
-		return connectedMsg{
-			conn:   conn,
-			client: gameClient,
-			stream: stream,
-		}
+	if !m.joined {
+		return fmt.Sprintf("Enter your name: %s\n", m.username)
 	}
+	return ui.RenderPlayerList(m.username, m.players)
 }
 
-func (m model) joinGame() tea.Cmd {
-	return func() tea.Msg {
-		_, err := m.gameClient.JoinGame(context.Background(), &pb.JoinRequest{
-			Username: m.name,
-		})
-		if err != nil {
-			return errorMsg{err}
-		}
-		return joinedMsg{}
-	}
-}
-
-func (m model) handleTicks() {
+func handleTicks(client *game.Client, tickChan chan<- game.TickMsg) {
+	defer close(tickChan)
 	for {
-		tick, err := m.stream.Recv()
-		if err == io.EOF {
-			return
-		}
+		tick, err := client.Stream.Recv()
 		if err != nil {
 			debugLog.Printf("Error receiving tick: %v", err)
 			return
 		}
-		if tick.State.GameStarted {
-			debugLog.Printf("Game started! Players: %d", tick.State.PlayerCount)
-			for _, p := range tick.State.Players {
-				debugLog.Printf("Player: %s (ID: %s)", p.Name, p.Id)
-			}
-		} else {
-			debugLog.Printf("Waiting for players: %d", tick.State.PlayerCount)
+		debugLog.Printf("Received tick from server: %v", tick)
+		tickMsg := game.TickMsg{
+			PlayerCount: tick.PlayerCount,
+			Players:     tick.Players,
+			Started:     tick.Started,
 		}
+		debugLog.Printf("Sending tick to channel: %v", tickMsg)
+		tickChan <- tickMsg
+	}
+}
+
+func waitForTicks(tickChan <-chan game.TickMsg) tea.Cmd {
+	return func() tea.Msg {
+		return <-tickChan
+	}
+}
+
+func main() {
+	p := tea.NewProgram(model{})
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error: %v", err)
+		os.Exit(1)
 	}
 }

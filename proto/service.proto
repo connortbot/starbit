@@ -4,8 +4,8 @@ package proto;
 option go_package = "starbit/proto";
 
 service Game {
-  rpc JoinGame (JoinRequest) returns (Empty) {}
-  rpc SubscribeToTicks (Empty) returns (stream TickUpdate) {}
+  rpc JoinGame (JoinRequest) returns (JoinResponse) {}
+  rpc SubscribeToTicks (SubscribeRequest) returns (stream TickUpdate) {}
 }
 
 message Empty {}
@@ -14,9 +14,18 @@ message JoinRequest {
   string username = 1;
 }
 
+message JoinResponse {
+  int32 playerCount = 1;
+  map<string, Player> players = 2;
+  bool started = 3;
+}
+
+message SubscribeRequest {
+  string username = 1;
+}
+
 message Player {
-  string id = 1;
-  string name = 2;
+  string name = 1;
 }
 
 message System {
@@ -29,12 +38,13 @@ message GalaxyState {
 }
 
 message GameState {
-  int32 player_count = 1;
-  repeated Player players = 2;
-  GalaxyState galaxy = 3;
-  bool game_started = 4;
+  int32 playerCount = 1;
+  map<string, Player> players = 2;
+  bool started = 3;
 }
 
 message TickUpdate {
-  GameState State = 1;
+  int32 playerCount = 1;
+  map<string, Player> players = 2;
+  bool started = 3;
 } 
