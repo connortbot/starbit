@@ -34,7 +34,6 @@ type model struct {
 	started     bool
 	playerCount int32
 	players     map[string]*pb.Player
-	tickChan    chan game.TickMsg
 	joined      bool
 	galaxy      *pb.GalaxyState
 
@@ -63,33 +62,37 @@ func (m model) View() string {
 	return ui.RenderGameScreen(m.username, m.players, m.started, m.galaxy, m.command)
 }
 
-func handleTicks(client *game.Client, tickChan chan<- game.TickMsg) {
-	defer close(tickChan)
-	for {
-		tick, err := client.Stream.Recv()
-		if err != nil {
-			debugLog.Printf("Error receiving tick: %v", err)
-			return
+func listenForTicks(client *game.Client, p *tea.Program) {
+    for {
+		if client.Stream == nil {
+			continue
 		}
-		tickMsg := game.TickMsg{
-			PlayerCount: tick.PlayerCount,
-			Players:     tick.Players,
-			Started:     tick.Started,
-			Galaxy:      tick.Galaxy,
-		}
+        tick, err := client.Stream.Recv()
+        if err != nil {
+            debugLog.Printf("Error receiving tick: %v", err)
+            return
+        }
+        tickMsg := game.TickMsg{
+            PlayerCount: tick.PlayerCount,
+            Players:     tick.Players,
+            Started:     tick.Started,
+            Galaxy:      tick.Galaxy,
+        }
 		debugLog.Printf("Tick: %v", tickMsg)
-		tickChan <- tickMsg
-	}
-}
-
-func waitForTicks(tickChan <-chan game.TickMsg) tea.Cmd {
-	return func() tea.Msg {
-		return <-tickChan
-	}
+        p.Send(tickMsg)
+    }
 }
 
 func main() {
-	p := tea.NewProgram(model{}, tea.WithAltScreen())
+	client := game.NewClient()
+	if err := client.Connect(); err != nil {
+		fmt.Printf("Error: %v", err)
+		os.Exit(1)
+	}
+	p := tea.NewProgram(model{
+		client: client,
+	}, tea.WithAltScreen())
+	go listenForTicks(client, p)
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error: %v", err)
 		os.Exit(1)

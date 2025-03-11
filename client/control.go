@@ -17,22 +17,14 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 			return m, tea.Quit
 		case "enter":
 			if m.username != "" && !m.started {
-				client := game.NewClient()
-				if err := client.Connect(); err != nil {
+				if err := m.client.SubscribeToTicks(m.username); err != nil {
+					m.client.Close()
 					m.err = err
 					return m, nil
 				}
-				if err := client.SubscribeToTicks(m.username); err != nil {
-					client.Close()
-					m.err = err
-					return m, nil
-				}
-				m.client = client
-				m.tickChan = make(chan game.TickMsg, 10)
-				go handleTicks(client, m.tickChan)
-				resp, err := client.JoinGame(m.username)
+				resp, err := m.client.JoinGame(m.username)
 				if err != nil {
-					client.Close()
+					m.client.Close()
 					m.err = err
 					return m, nil
 				}
@@ -41,7 +33,7 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.players = resp.Players
 				m.started = resp.Started
 				m.galaxy = resp.Galaxy
-				return m, waitForTicks(m.tickChan)
+				return m, nil
 			}
 		case "backspace":
 			if len(m.username) > 0 && !m.started {
@@ -59,7 +51,7 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 		if msg.Galaxy != nil {
 			m.galaxy = msg.Galaxy
 		}
-		return m, waitForTicks(m.tickChan)
+		return m, nil
 	}
 	return m, nil
 }
@@ -91,7 +83,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 		if msg.Galaxy != nil {
 			m.galaxy = msg.Galaxy
 		}
-		return m, waitForTicks(m.tickChan)
+		return m, nil
 	}
 	return m, nil
 }
