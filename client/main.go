@@ -36,6 +36,7 @@ type model struct {
 	players     map[string]*pb.Player
 	tickChan    chan game.TickMsg
 	joined      bool
+	galaxy      *pb.GalaxyState
 }
 
 func (m model) Init() tea.Cmd {
@@ -76,6 +77,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.playerCount = resp.PlayerCount
 				m.players = resp.Players
 				m.started = resp.Started
+				m.galaxy = resp.Galaxy
+				debugLog.Printf("Started: %v, Galaxy: %v", m.started, m.galaxy)
 				return m, waitForTicks(m.tickChan)
 			}
 		case "backspace":
@@ -103,7 +106,8 @@ func (m model) View() string {
 	if !m.joined {
 		return fmt.Sprintf("Enter your name: %s\n", m.username)
 	}
-	return ui.RenderPlayerList(m.username, m.players)
+	debugLog.Printf("Started: %v, Galaxy: %v", m.started, m.galaxy)
+	return ui.RenderPlayerList(m.username, m.players, m.started, m.galaxy)
 }
 
 func handleTicks(client *game.Client, tickChan chan<- game.TickMsg) {

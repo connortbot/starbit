@@ -30,7 +30,16 @@ func (s *Server) JoinGame(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRes
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, err := s.state.AddPlayer(req.Username)
+	full, err := s.state.AddPlayer(req.Username)
+	if full {
+		for _, client := range s.clients {
+			client.Send(&pb.TickUpdate{
+				PlayerCount: s.state.PlayerCount,
+				Players:     s.state.Players,
+				Started:     s.state.Started,
+			})
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +49,7 @@ func (s *Server) JoinGame(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRes
 		PlayerCount: s.state.PlayerCount,
 		Players:     s.state.Players,
 		Started:     s.state.Started,
+		Galaxy:      s.state.Galaxy,
 	}, nil
 }
 

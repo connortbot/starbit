@@ -18,6 +18,7 @@ message JoinResponse {
   int32 playerCount = 1;
   map<string, Player> players = 2;
   bool started = 3;
+  GalaxyState galaxy = 4;
 }
 
 message SubscribeRequest {
@@ -29,12 +30,16 @@ message Player {
 }
 
 message System {
-  int32 x = 1;
-  int32 y = 2;
+  int32 id = 1;
+  int32 x = 2;
+  int32 y = 3;
+  string owner = 4;
 }
 
 message GalaxyState {
   repeated System systems = 1;
+  int32 width = 2;
+  int32 height = 3;
 }
 
 message GameState {

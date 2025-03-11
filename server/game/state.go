@@ -23,12 +23,16 @@ type State struct {
 
 func NewState() *State {
 	systems := make([]*pb.System, 0, galaxyWidth*galaxyHeight)
+	id := 0
 	for y := 0; y < galaxyHeight; y++ {
 		for x := 0; x < galaxyWidth; x++ {
 			systems = append(systems, &pb.System{
-				X: int32(x),
-				Y: int32(y),
+				Id:  int32(id),
+				X:   int32(x),
+				Y:   int32(y),
+				Owner: "none",
 			})
+			id += 1
 		}
 	}
 
@@ -38,6 +42,8 @@ func NewState() *State {
 		Started:     false,
 		Galaxy: &pb.GalaxyState{
 			Systems: systems,
+			Width:   galaxyWidth,
+			Height:  galaxyHeight,
 		},
 	}
 }
