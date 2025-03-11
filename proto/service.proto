@@ -52,4 +52,5 @@ message TickUpdate {
   int32 playerCount = 1;
   map<string, Player> players = 2;
   bool started = 3;
+  GalaxyState galaxy = 4;
 } 

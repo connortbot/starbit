@@ -13,6 +13,7 @@ type TickMsg struct {
 	PlayerCount int32
 	Players     map[string]*pb.Player
 	Started     bool
+	Galaxy      *pb.GalaxyState
 }
 
 type Client struct {

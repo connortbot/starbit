@@ -1,4 +1,3 @@
 #! /bin/bash
 
-rm -f debug.log
-DEBUG=1 go run ./client
+USER="$1" DEBUG=1 go run ./client

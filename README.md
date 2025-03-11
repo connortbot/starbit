@@ -25,39 +25,38 @@ The game is updated in 5 second ticks. Players can perform as many actions as th
 All actions by players can be divided into:
 - Gaining resources
 - Creating units
-- Battling for control over sectors
+- Battling for control over Systems
 
 The actions are performed via typing commands into the terminal.
 
 #### Combat
-Players move Ships into Systems, which fight other enemy Ships. During each tick, the Ships will deal and take damage.
-Once there is only one Player's Ships remaining, that Player owns the Sector. 
+Players move Fleets into Systems, which fight other enemy Fleets. During each tick, the Fleets will deal and take damage.
+Once there is only one Player's Fleet remaining, that Player owns the Sector. 
 Owning a Sector yields a 10% bonus to ALL stats.
 
-Every Ship has:
+Every Fleet has:
 - Attack
 - Ex Attack (high damage)
-- Armor (% protection against Ex Attack)
-- Evasion (% chance to avoid Attack)
-- Health (death upon 0)
-- Recovery Rate
+- Armor (weighted average % protection against Ex Attack)
+- Evasion (weighted average % protection against Attack)
+- Health (death upon 0, add more ships to increase)
+Fleets are comprised of Ships, which can be added to Fleets thereby shifting the stats.
 
 **Tick Resolution:**
-1. Each Ship rolls Evasion
-2. Each Ship chooses a random enemy Ship and deals Attack. Deals 0 if they evade.
-3. Each Ship then deals Ex Attack to the same Ship. Mitigated by their Armor.
-4. Every Ship with Health <= 0, destroy.
+1. Each Fleet rolls Evasion
+2. Each Fleet chooses a random enemy Fleet and deals Attack. Mitigated by their Evasion.
+3. Each Fleet then deals Ex Attack to the same Fleet. Mitigated by their Armor.
+4. Every Fleet with Health <= 0, destroy.
 
-When not in battles, all Ships regain Health at the Recovery Rate if they own the System.
-Ships receive a 50% penalty if they are not properly supplied. This leads us to...
+Fleets receive a 50% penalty if they are not properly supplied. This leads us to...
 
 #### Resources & Supply
 There is only one currency in this game: General Energy Substance (GES).
-Players build Factories, which generate GES/tick. GES is used to create Ships, and all Ships require spending of GES per tick.
+Players build Factories, which generate GES/tick. GES is used to create Fleets, and all Fleets require spending of GES per tick.
 
 Players must create Convoys. Each Convoy is able to 'supply' an amount of GES. 
-**Example:** Jonathan spends around X GES/tick on Ships. Each Convoy supplies around Y GES/tick. If Y < X, the Ships get a supply penalty.
-> Its important to note that Fixed costs (building Ships and Factories) don't contribute to Variable Costs (maintenance GES/tick)
+**Example:** Jonathan spends around X GES/tick on Fleets. Each Convoy supplies around Y GES/tick. If Y < X, the Fleets get a supply penalty.
+> Its important to note that Fixed costs (building Ships for Fleets, and Factories) don't contribute to Variable Costs (maintenance GES/tick)
 
 Players can build an infinite amount of Factories. They are not located in Systems.
 
@@ -77,11 +76,11 @@ Press Ctrl+C to quit
 ```
 
 For a very first, working version, I greatly simplified the core gameplay.
-- Only one type of Ship
 - No Supply system
 - No GES or Factories
+- No depth to Fleets, all same stats.
 
-The biggest concern was the user experience. I wanted the gameplay to be keystroke heavy, but how could a player efficiently control over, say, 50 ships? 
-A better way of designing this would be to lessen the amount of units that need to be controlled withought sacrificing strategic depth in the stats.
+The biggest concern was the user experience. Originally, a Player would tens to hundreds of Ships individually managed. I wanted the gameplay to be keystroke heavy, but how could a player efficiently control over, say, 50 ships? 
+A better way of designing this would be to lessen the amount of units that need to be controlled without sacrificing strategic depth in the stats.
 
-Instead of 50 ships, think of them as 3-5 fleets. This is not only more realistic but easier to control.
+> Instead of 50 ships, think of them as 3-5 Fleets! This is not only more realistic but easier to control.

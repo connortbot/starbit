@@ -16,7 +16,7 @@ var debugLog *log.Logger
 
 func init() {
 	if len(os.Getenv("DEBUG")) > 0 {
-		f, err := tea.LogToFile("debug.log", "debug")
+		f, err := tea.LogToFile("debug" + os.Getenv("USER") + ".log", "debug")
 		if err != nil {
 			fmt.Println("fatal:", err)
 			os.Exit(1)
@@ -37,6 +37,8 @@ type model struct {
 	tickChan    chan game.TickMsg
 	joined      bool
 	galaxy      *pb.GalaxyState
+
+	command string
 }
 
 func (m model) Init() tea.Cmd {
@@ -44,59 +46,11 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			if m.client != nil {
-				m.client.Close()
-			}
-			return m, tea.Quit
-		case "enter":
-			if m.username != "" && !m.started {
-				client := game.NewClient()
-				if err := client.Connect(); err != nil {
-					m.err = err
-					return m, nil
-				}
-				if err := client.SubscribeToTicks(m.username); err != nil {
-					client.Close()
-					m.err = err
-					return m, nil
-				}
-				m.client = client
-				m.tickChan = make(chan game.TickMsg)
-				go handleTicks(client, m.tickChan)
-				resp, err := client.JoinGame(m.username)
-				if err != nil {
-					client.Close()
-					m.err = err
-					return m, nil
-				}
-				m.joined = true
-				m.playerCount = resp.PlayerCount
-				m.players = resp.Players
-				m.started = resp.Started
-				m.galaxy = resp.Galaxy
-				debugLog.Printf("Started: %v, Galaxy: %v", m.started, m.galaxy)
-				return m, waitForTicks(m.tickChan)
-			}
-		case "backspace":
-			if len(m.username) > 0 && !m.started {
-				m.username = m.username[:len(m.username)-1]
-			}
-		default:
-			if len(msg.String()) == 1 && !m.started {
-				m.username += msg.String()
-			}
-		}
-	case game.TickMsg:
-		m.playerCount = msg.PlayerCount
-		m.started = msg.Started
-		m.players = msg.Players
-		return m, waitForTicks(m.tickChan)
+	if !m.started {
+		return m.HandleMenu(msg)
+	} else {
+		return m.HandleGame(msg)
 	}
-	return m, nil
 }
 
 func (m model) View() string {
@@ -106,8 +60,7 @@ func (m model) View() string {
 	if !m.joined {
 		return fmt.Sprintf("Enter your name: %s\n", m.username)
 	}
-	debugLog.Printf("Started: %v, Galaxy: %v", m.started, m.galaxy)
-	return ui.RenderPlayerList(m.username, m.players, m.started, m.galaxy)
+	return ui.RenderGameScreen(m.username, m.players, m.started, m.galaxy, m.command)
 }
 
 func handleTicks(client *game.Client, tickChan chan<- game.TickMsg) {
@@ -118,13 +71,13 @@ func handleTicks(client *game.Client, tickChan chan<- game.TickMsg) {
 			debugLog.Printf("Error receiving tick: %v", err)
 			return
 		}
-		debugLog.Printf("Received tick from server: %v", tick)
 		tickMsg := game.TickMsg{
 			PlayerCount: tick.PlayerCount,
 			Players:     tick.Players,
 			Started:     tick.Started,
+			Galaxy:      tick.Galaxy,
 		}
-		debugLog.Printf("Sending tick to channel: %v", tickMsg)
+		debugLog.Printf("Tick: %v", tickMsg)
 		tickChan <- tickMsg
 	}
 }
@@ -136,7 +89,7 @@ func waitForTicks(tickChan <-chan game.TickMsg) tea.Cmd {
 }
 
 func main() {
-	p := tea.NewProgram(model{})
+	p := tea.NewProgram(model{}, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error: %v", err)
 		os.Exit(1)

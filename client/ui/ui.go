@@ -15,7 +15,21 @@ var (
 	greenStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00"))
 )
 
-func RenderPlayerList(username string, players map[string]*pb.Player, started bool, galaxy *pb.GalaxyState) string {
+func RenderCommandLine(command string) string {
+	var s strings.Builder
+	s.WriteString("╭─────────────────╮\n")
+	s.WriteString(fmt.Sprintf("│ %s│\n", command))
+	s.WriteString("╰─────────────────╯\n\n")
+	return s.String()
+}
+
+func RenderGameScreen(
+	username string,
+	players map[string]*pb.Player,
+	started bool,
+	galaxy *pb.GalaxyState,
+	command string,
+) string {
 	var s strings.Builder
 	s.WriteString("╭──── Starbit ────╮\n")
 	s.WriteString(fmt.Sprintf("│ Players: %d/2    │\n", len(players)))
@@ -43,6 +57,7 @@ func RenderPlayerList(username string, players map[string]*pb.Player, started bo
 	if started && galaxy != nil {
 		s.WriteString(RenderGalaxy(galaxy, username))
 		s.WriteString("\n")
+		s.WriteString(RenderCommandLine(command))
 	}
 
 	s.WriteString("Press Ctrl+C to quit\n")

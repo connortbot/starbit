@@ -28,29 +28,39 @@ func NewServer() *Server {
 
 func (s *Server) JoinGame(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	full, err := s.state.AddPlayer(req.Username)
-	if full {
-		for _, client := range s.clients {
-			client.Send(&pb.TickUpdate{
-				PlayerCount: s.state.PlayerCount,
-				Players:     s.state.Players,
-				Started:     s.state.Started,
-			})
-		}
-	}
 	if err != nil {
+		s.mu.Unlock()
 		return nil, err
 	}
-	log.Printf("Player joined: %s", req.Username)
 
-	return &pb.JoinResponse{
+	if full {
+		s.state.InitializeGame(s.state.Players)
+	}
+
+	response := &pb.JoinResponse{
 		PlayerCount: s.state.PlayerCount,
 		Players:     s.state.Players,
 		Started:     s.state.Started,
 		Galaxy:      s.state.Galaxy,
-	}, nil
+	}
+
+	s.mu.Unlock()
+
+	if full {
+		log.Printf("Amount of clients: %d", len(s.clients))
+		for _, client := range s.clients {
+			client.Send(&pb.TickUpdate{
+				PlayerCount: response.PlayerCount,
+				Players:     response.Players,
+				Started:     response.Started,
+				Galaxy:      response.Galaxy,
+			})
+		}
+	}
+	log.Printf("Player joined: %s", req.Username)
+
+	return response, nil
 }
 
 func (s *Server) SubscribeToTicks(req *pb.SubscribeRequest, stream pb.Game_SubscribeToTicksServer) error {
@@ -71,10 +81,20 @@ func (s *Server) SubscribeToTicks(req *pb.SubscribeRequest, stream pb.Game_Subsc
 			return nil
 		case <-s.ticker.C:
 			log.Printf("Tick received from ticker")
-			if err := stream.Send(&pb.TickUpdate{
+
+			s.mu.Lock()
+			update := &pb.TickUpdate{
 				PlayerCount: s.state.PlayerCount,
 				Players:     s.state.Players,
 				Started:     s.state.Started,
+			}
+			s.mu.Unlock()
+
+			if err := stream.Send(&pb.TickUpdate{
+				PlayerCount: update.PlayerCount,
+				Players:     update.Players,
+				Started:     update.Started,
+				Galaxy:      nil,
 			}); err != nil {
 				log.Printf("Error sending tick: %v", err)
 				return err
