@@ -34,6 +34,7 @@ message System {
   int32 x = 2;
   int32 y = 3;
   string owner = 4;
+  repeated Fleet fleets = 5;
 }
 
 message GalaxyState {
@@ -53,4 +54,10 @@ message TickUpdate {
   map<string, Player> players = 2;
   bool started = 3;
   GalaxyState galaxy = 4;
-} 
+}
+
+message Fleet {
+  string owner = 1;
+  int32 attack = 2;
+  int32 health = 3;
+}

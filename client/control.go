@@ -3,6 +3,8 @@ package main
 import (
 	"starbit/client/game"
 
+	"starbit/client/ui"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -33,6 +35,8 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.players = resp.Players
 				m.started = resp.Started
 				m.galaxy = resp.Galaxy
+				m.inspector = ui.NewInspectWindow(60, m.galaxy.Systems[0])
+				m.controlMode = CommandMode
 				return m, nil
 			}
 		case "backspace":
@@ -65,14 +69,58 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				m.client.Close()
 			}
 			return m, tea.Quit
+		case "C", "shift+c":
+			m.controlMode = CommandMode
+		case "I", "shift+i":
+			m.controlMode = InspectMode
+		case "E", "shift+e":
+			m.controlMode = ExploreMode
+		case "up":
+			if m.controlMode == InspectMode {
+				m.inspector.ScrollUp()
+			} else if m.controlMode == ExploreMode {
+				if m.selectedY > 0 {
+					m.selectedY--
+				}
+			}
+		case "down":
+			if m.controlMode == InspectMode {
+				m.inspector.ScrollDown()
+			} else if m.controlMode == ExploreMode {
+				if m.galaxy != nil && m.selectedY < m.galaxy.Height-1 {
+					m.selectedY++
+				}
+			}
+		case "shift+up":
+			if m.controlMode == InspectMode {
+				m.inspector.ScrollToTop()
+			}
+		case "shift+down":
+			if m.controlMode == InspectMode {
+				m.inspector.ScrollToBottom()
+			}
+		case "left":
+			if m.controlMode == ExploreMode {
+				if m.selectedX > 0 {
+					m.selectedX--
+				}
+			}
+		case "right":
+			if m.controlMode == ExploreMode {
+				if m.galaxy != nil && m.selectedX < m.galaxy.Width-1 {
+					m.selectedX++
+				}
+			}
 		case "enter":
-			debugLog.Printf("Enter: %s", m.command)
+			if m.controlMode == CommandMode {
+				debugLog.Printf("Enter: %s", m.command)
+			}
 		case "backspace":
-			if len(m.command) > 0 {
+			if m.controlMode == CommandMode && len(m.command) > 0 {
 				m.command = m.command[:len(m.command)-1]
 			}
 		default:
-			if len(msg.String()) == 1 {
+			if m.controlMode == CommandMode && len(msg.String()) == 1 {
 				m.command += msg.String()
 			}
 		}

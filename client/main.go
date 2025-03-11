@@ -16,7 +16,7 @@ var debugLog *log.Logger
 
 func init() {
 	if len(os.Getenv("DEBUG")) > 0 {
-		f, err := tea.LogToFile("debug" + os.Getenv("USER") + ".log", "debug")
+		f, err := tea.LogToFile("debug"+os.Getenv("USER")+".log", "debug")
 		if err != nil {
 			fmt.Println("fatal:", err)
 			os.Exit(1)
@@ -26,6 +26,14 @@ func init() {
 		debugLog = log.New(os.Stderr, "", log.LstdFlags)
 	}
 }
+
+type ControlMode string
+
+const (
+	CommandMode ControlMode = "Command"
+	InspectMode ControlMode = "Inspect"
+	ExploreMode ControlMode = "Explore"
+)
 
 type model struct {
 	username    string
@@ -37,7 +45,14 @@ type model struct {
 	joined      bool
 	galaxy      *pb.GalaxyState
 
-	command string
+	command   string
+	inspector *ui.ScrollingViewport
+
+	// selection coordinates for galaxy nav
+	selectedX int32
+	selectedY int32
+
+	controlMode ControlMode
 }
 
 func (m model) Init() tea.Cmd {
@@ -59,28 +74,40 @@ func (m model) View() string {
 	if !m.joined {
 		return fmt.Sprintf("Enter your name: %s\n", m.username)
 	}
-	return ui.RenderGameScreen(m.username, m.players, m.started, m.galaxy, m.command)
+	selectedSystemIndex := m.selectedY*m.galaxy.Width + m.selectedX
+	return ui.RenderGameScreen(
+		m.username,
+		m.players,
+		m.started,
+		m.galaxy,
+		m.command,
+		m.inspector,
+		m.selectedX,
+		m.selectedY,
+		m.galaxy.Systems[selectedSystemIndex],
+		string(m.controlMode),
+	)
 }
 
 func listenForTicks(client *game.Client, p *tea.Program) {
-    for {
+	for {
 		if client.Stream == nil {
 			continue
 		}
-        tick, err := client.Stream.Recv()
-        if err != nil {
-            debugLog.Printf("Error receiving tick: %v", err)
-            return
-        }
-        tickMsg := game.TickMsg{
-            PlayerCount: tick.PlayerCount,
-            Players:     tick.Players,
-            Started:     tick.Started,
-            Galaxy:      tick.Galaxy,
-        }
+		tick, err := client.Stream.Recv()
+		if err != nil {
+			debugLog.Printf("Error receiving tick: %v", err)
+			return
+		}
+		tickMsg := game.TickMsg{
+			PlayerCount: tick.PlayerCount,
+			Players:     tick.Players,
+			Started:     tick.Started,
+			Galaxy:      tick.Galaxy,
+		}
 		debugLog.Printf("Tick: %v", tickMsg)
-        p.Send(tickMsg)
-    }
+		p.Send(tickMsg)
+	}
 }
 
 func main() {

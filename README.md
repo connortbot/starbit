@@ -84,3 +84,93 @@ The biggest concern was the user experience. Originally, a Player would tens to 
 A better way of designing this would be to lessen the amount of units that need to be controlled without sacrificing strategic depth in the stats.
 
 > Instead of 50 ships, think of them as 3-5 Fleets! This is not only more realistic but easier to control.
+
+### Basic UI
+Added the ability to select cells and view a basic UI:
+```
+╭──── Starbit ─────╮
+│ Players: 2/2     │
+├──────────────────┤
+│   connor1        │
+│ ★ stella         │
+├──────────────────┤
+│      Ready       │
+╰──────────────────╯
+
+Galaxy Map:
+■ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ □ 
+□ □ □ □ □ □ □ □ □ ■ 
+
+╭─ Command ────────────────────────────────────────────────╮
+│ i love connor                                            │
+╰──────────────────────────────────────────────────────────╯
+
+Press Ctrl+C to quit
+```
+> courtesy of my girlfriend, also this is missing a lot of colours.
+The next step is, since the cells is limiting in terms of information, to have anothe window to the right of the galaxy showing info of the selected cell.
+
+This also means more UI custom functions to:
+- wrap given string content in a box (splitting by lines, adding)
+- placing boxes side by side
+
+## Fleets
+We initialize a basic Fleet type and some functions to spawn them in:
+```protobuf
+message Fleet {
+  string owner = 1;
+  int32 attack = 2;
+  int32 health = 3;
+}
+```
+And upon game start, we place 1 Fleet in the starting positions accordingly.
+
+## User Controls
+After some experimenting, I landed on having players:
+- VIEW information with the Inspector
+- CHOOSE information with the Galaxy Map, choosing the System
+- ACTION with the Command line.
+
+After basically creating a mini UI library from scratch to make the boxes and some keybinds to switch between modes, 
+
+```
+╭──── Starbit ─────╮
+│ Players: 2/2     │
+├──────────────────┤
+│ ★ connortbot     │
+│   pranavbedi     │
+├──────────────────┤
+│      Ready       │
+╰──────────────────╯
+
+╭─────── Galaxy ───────╮  ╭─────────────────────── Inspector ────────────────────────╮
+│ ■ □ □ □ □ □ □ □ □ □  │  │ ╭────────╮ ╭──────────────────╮ ╭───────────────────╮    │
+│ □ □ □ □ □ □ □ □ □ □  │  │ │ ID: 0  │ │ Location: 0, 0   │ │ Owner: connortbot │    │
+│ □ □ □ □ □ □ □ □ □ □  │  │ ╰────────╯ ╰──────────────────╯ ╰───────────────────╯    │
+│ □ □ □ □ □ □ □ □ □ □  │  │                                                          │
+│ □ □ □ □ □ □ □ □ □ □  │  │ ╭──────────────────── Fleet ─────────────────────╮       │
+│ □ □ □ □ □ □ □ □ □ □  │  │ │ HP: ██████████████████████████████████████ 100 │       │
+│ □ □ □ □ □ □ □ □ □ □  │  │ │                                                │       │
+│ □ □ □ □ □ □ □ □ □ □  │  │ │ Owner: connortbot    Attack: 10                │       │
+│ □ □ □ □ □ □ □ □ □ □  │  │ ╰────────────────────────────────────────────────╯       │
+│ □ □ □ □ □ □ □ □ □ ■  │  │                                                          │
+╰──────────────────────╯  ╰──────────────────────────────────────────────────────────╯
+╭─ Command ────────────────────────────────────────────────╮
+│ >                                                        │
+╰──────────────────────────────────────────────────────────╯
+
+╭──────────────╮  ╭──────────────────╮  ╭──────────────────╮  ╭──────────────╮
+│ Cmd: Shift+C │  │ Inspect: Shift+I │  │ Explore: Shift+E │  │ Quit: Ctrl+C │
+╰──────────────╯  ╰──────────────────╯  ╰──────────────────╯  ╰──────────────╯
+
+   Mode: Command
+```
+> again, no colours
