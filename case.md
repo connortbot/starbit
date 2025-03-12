@@ -318,5 +318,5 @@ chmod +x setup_server.sh
 ./setup_server.sh
 source ~/.bashrc
 chmod +x run_server.sh
-./run_server.sh 3.133.113.171
+./run_server.sh
 ```
