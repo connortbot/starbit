@@ -231,3 +231,22 @@ We can also comfortably add a win condition that all systems need to be conquere
 ![aint it cool 2](./screenshots/01.png)
 
 We allow the user to input commands. This sends a packet via UDP requesting to move the ship. If it works (otherwise, the server will send an error message back), the server will add it to its next tick message and update all clients simultaneously.
+
+## Battles
+Along with Battles, we just introduce not allowing users to move Fleets.
+- If a Fleet is engaged in battle
+- If a Fleet was moved during this tick already
+
+Note that we don't actually need to establish complicated objects for Battles, we can just keep track of which Systems currently have Fleets from different owners, and thus are engaging in Battle. We can then just run calculations on those.
+
+Then, we make a list of Fleet IDs who were moved this tick - and whenever a user tries to move it twice in one tick they will not be allowed.
+
+```protobuf
+message TickMsg {
+  string message = 1;
+  repeated FleetMovement fleetMovements = 2;
+  repeated HealthUpdate healthUpdates = 3;
+  repeated FleetDestroyed fleetDestroyed = 4;
+  repeated SystemOwnerChange systemOwnerChanges = 5;
+}
+```

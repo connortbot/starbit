@@ -180,6 +180,46 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				}
 			}
 		}
+
+		if len(msg.HealthUpdates) > 0 {
+			debugLog.Printf("Received %d health updates", len(msg.HealthUpdates))
+			for _, update := range msg.HealthUpdates {
+				err := game.ApplyHealthUpdate(m.galaxy, update)
+				if err != nil {
+					debugLog.Printf("Error applying health update: %v", err)
+				} else {
+					debugLog.Printf("Fleet %d health updated to %d in system %d",
+						update.FleetId, update.Health, update.SystemId)
+				}
+			}
+		}
+
+		if len(msg.FleetDestroyed) > 0 {
+			debugLog.Printf("Received %d destroyed fleets", len(msg.FleetDestroyed))
+			for _, destroyed := range msg.FleetDestroyed {
+				err := game.ProcessFleetDestroyed(m.galaxy, destroyed)
+				if err != nil {
+					debugLog.Printf("Error processing destroyed fleet: %v", err)
+				} else {
+					debugLog.Printf("Fleet %d was destroyed in system %d",
+						destroyed.FleetId, destroyed.SystemId)
+				}
+			}
+		}
+
+		if len(msg.SystemOwnerChanges) > 0 {
+			debugLog.Printf("Received %d system owner changes", len(msg.SystemOwnerChanges))
+			for _, change := range msg.SystemOwnerChanges {
+				err := game.SetSystemOwner(m.galaxy, change.SystemId, change.Owner)
+				if err != nil {
+					debugLog.Printf("Error setting system owner: %v", err)
+				} else {
+					debugLog.Printf("System %d owner changed to %s",
+						change.SystemId, change.Owner)
+				}
+			}
+		}
+
 		return m, nil
 	case game.ErrorMessage:
 		debugLog.Printf("Error from server: %s", msg.Content)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	pb "starbit/proto"
+	galaxy "starbit/server/game/galaxy"
 
 	"github.com/quic-go/quic-go"
 )
@@ -26,7 +27,7 @@ type UDPServer struct {
 func NewUDPServer(listener *quic.Listener) *UDPServer {
 	return &UDPServer{
 		listener:    listener,
-		ticker:      time.NewTicker(3 * time.Second),
+		ticker:      time.NewTicker(1 * time.Second),
 		clients:     make(map[quic.Connection]map[quic.Stream]string),
 		done:        make(chan struct{}),
 		tickMessage: &pb.TickMsg{},
@@ -115,7 +116,7 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 
 		case "fleet_movement":
 			if msg.TickMsg != nil && len(msg.TickMsg.FleetMovements) > 0 {
-				err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0])
+				ownerChange, err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0])
 				if err != nil {
 					log.Printf("Error moving fleet: %v", err)
 
@@ -130,6 +131,11 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 				} else {
 					s.mu.Lock()
 					s.tickMessage.FleetMovements = append(s.tickMessage.FleetMovements, msg.TickMsg.FleetMovements[0])
+
+					if ownerChange != nil {
+						s.tickMessage.SystemOwnerChanges = append(s.tickMessage.SystemOwnerChanges, ownerChange)
+					}
+
 					s.mu.Unlock()
 				}
 			}
@@ -151,6 +157,66 @@ func (s *UDPServer) broadcastTicks() {
 			s.mu.Lock()
 			s.state.mu.Lock()
 
+			remainingBattlingSystems := []int32{}
+			for _, systemId := range s.state.battlingSystems {
+				// Process battles
+				battleActive, healthUpdates, fleetsDestroyed, newOwner := galaxy.ExecuteBattle(s.state.Galaxy, systemId)
+
+				// Process health updates
+				if len(healthUpdates) > 0 {
+					s.tickMessage.HealthUpdates = append(s.tickMessage.HealthUpdates, healthUpdates...)
+				}
+
+				// Process destroyed fleets
+				if len(fleetsDestroyed) > 0 {
+					s.tickMessage.FleetDestroyed = append(s.tickMessage.FleetDestroyed, fleetsDestroyed...)
+				}
+
+				if battleActive {
+					// Battle continues - keep the system in the battle list
+					remainingBattlingSystems = append(remainingBattlingSystems, systemId)
+
+					// Ensure the system remains marked as contested (owner="none") while battle is active
+					system := s.state.Galaxy.Systems[systemId]
+					if system.Owner != "none" {
+						ownerChange, _ := s.state.SetSystemOwner(systemId, "none")
+						if ownerChange != nil {
+							s.tickMessage.SystemOwnerChanges = append(s.tickMessage.SystemOwnerChanges, ownerChange)
+						}
+					}
+				} else {
+					// Battle has ended - determine the new owner
+					if newOwner != "" {
+						ownerChange, err := s.state.SetSystemOwner(systemId, newOwner)
+						if err == nil && ownerChange != nil {
+							s.tickMessage.SystemOwnerChanges = append(s.tickMessage.SystemOwnerChanges, ownerChange)
+						}
+					}
+				}
+			}
+
+			// Clean up: remove any duplicate system owner changes, keeping only the last one for each system
+			if len(s.tickMessage.SystemOwnerChanges) > 1 {
+				// Map to store the latest owner change per system
+				latestChanges := make(map[int32]*pb.SystemOwnerChange)
+
+				// Process changes in order, so the latest one will overwrite earlier ones
+				for _, change := range s.tickMessage.SystemOwnerChanges {
+					latestChanges[change.SystemId] = change
+				}
+
+				// Convert map back to slice
+				updatedChanges := make([]*pb.SystemOwnerChange, 0, len(latestChanges))
+				for _, change := range latestChanges {
+					updatedChanges = append(updatedChanges, change)
+				}
+
+				// Replace the changes list with the deduplicated version
+				s.tickMessage.SystemOwnerChanges = updatedChanges
+			}
+
+			s.state.battlingSystems = remainingBattlingSystems
+
 			update := ServerMessage{
 				Type:    "tick",
 				TickMsg: s.tickMessage,
@@ -166,6 +232,7 @@ func (s *UDPServer) broadcastTicks() {
 				}
 			}
 			s.tickMessage = &pb.TickMsg{}
+			s.state.movedFleets = []int32{}
 
 			s.state.mu.Unlock()
 			s.mu.Unlock()

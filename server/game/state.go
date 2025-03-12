@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 
 	pb "starbit/proto"
@@ -22,6 +23,9 @@ type State struct {
 	Galaxy      *pb.GalaxyState
 	mu          sync.Mutex
 	nextFleetID int32
+
+	movedFleets     []int32 // fleets who have moved this tick
+	battlingSystems []int32 // systems who are currently battling
 }
 
 func NewState() *State {
@@ -97,15 +101,19 @@ func (g *State) InitializeGame(players map[string]*pb.Player) {
 	g.Started = true
 }
 
-func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) error {
+func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) (*pb.SystemOwnerChange, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
+	if slices.Contains(g.movedFleets, fleetMovement.FleetId) || slices.Contains(g.battlingSystems, fleetMovement.FromSystemId) {
+		return nil, fmt.Errorf("fleet %d has already been moved or is battling", fleetMovement.FleetId)
+	}
+
 	if fleetMovement.FromSystemId < 0 || fleetMovement.FromSystemId >= int32(len(g.Galaxy.Systems)) {
-		return fmt.Errorf("source system with ID %d not found", fleetMovement.FromSystemId)
+		return nil, fmt.Errorf("source system with ID %d not found", fleetMovement.FromSystemId)
 	}
 	if fleetMovement.ToSystemId < 0 || fleetMovement.ToSystemId >= int32(len(g.Galaxy.Systems)) {
-		return fmt.Errorf("destination system with ID %d not found", fleetMovement.ToSystemId)
+		return nil, fmt.Errorf("destination system with ID %d not found", fleetMovement.ToSystemId)
 	}
 
 	sourceSystem := g.Galaxy.Systems[fleetMovement.FromSystemId]
@@ -122,17 +130,64 @@ func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) erro
 	}
 
 	if fleet == nil {
-		return fmt.Errorf("fleet ID %d not found in system ID %d",
+		return nil, fmt.Errorf("fleet ID %d not found in system ID %d",
 			fleetMovement.FleetId, fleetMovement.FromSystemId)
 	}
 
 	if fleet.Owner != username {
-		return fmt.Errorf("fleet %d is not owned by %s", fleetMovement.FleetId, username)
+		return nil, fmt.Errorf("fleet %d is not owned by %s", fleetMovement.FleetId, username)
 	}
 
 	// remove from source system
 	sourceSystem.Fleets = append(sourceSystem.Fleets[:fleetIndex], sourceSystem.Fleets[fleetIndex+1:]...)
 	// add to destination system
 	destSystem.Fleets = append(destSystem.Fleets, fleet)
-	return nil
+	g.movedFleets = append(g.movedFleets, fleetMovement.FleetId)
+
+	if galaxy.ShouldBattleBegin(g.Galaxy, fleetMovement.ToSystemId) {
+		g.battlingSystems = append(g.battlingSystems, fleetMovement.ToSystemId)
+		return g.SetSystemOwner(fleetMovement.ToSystemId, "none")
+	}
+
+	// check only one player's fleets here
+	ownerMap := make(map[string]bool)
+	for _, f := range destSystem.Fleets {
+		if f.Owner != "" {
+			ownerMap[f.Owner] = true
+		}
+	}
+
+	// if there's exactly one owner, set the system owner to that fleet owner
+	var ownerChange *pb.SystemOwnerChange
+	if len(ownerMap) == 1 {
+		var owner string
+		for o := range ownerMap {
+			owner = o
+			break
+		}
+
+		var err error
+		ownerChange, err = g.SetSystemOwner(fleetMovement.ToSystemId, owner)
+		if err != nil {
+			fmt.Printf("Failed to set system owner: %v\n", err)
+		}
+	}
+
+	return ownerChange, nil
+}
+
+func (g *State) SetSystemOwner(systemId int32, owner string) (*pb.SystemOwnerChange, error) {
+	if systemId < 0 || systemId >= int32(len(g.Galaxy.Systems)) {
+		return nil, fmt.Errorf("system with ID %d not found", systemId)
+	}
+
+	if g.Galaxy.Systems[systemId].Owner != owner {
+		g.Galaxy.Systems[systemId].Owner = owner
+
+		return &pb.SystemOwnerChange{
+			SystemId: systemId,
+			Owner:    owner,
+		}, nil
+	}
+	return nil, nil
 }

@@ -67,10 +67,29 @@ message Fleet {
 message TickMsg {
   string message = 1;
   repeated FleetMovement fleetMovements = 2;
+  repeated HealthUpdate healthUpdates = 3;
+  repeated FleetDestroyed fleetDestroyed = 4;
+  repeated SystemOwnerChange systemOwnerChanges = 5;
 }
 
 message FleetMovement {
   int32 fleetId = 1;
   int32 fromSystemId = 2;
   int32 toSystemId = 3;
+}
+
+message HealthUpdate {
+  int32 fleetId = 1;
+  int32 health = 2;
+  int32 systemId = 3;
+}
+
+message FleetDestroyed {
+  int32 fleetId = 1;
+  int32 systemId = 2;
+}
+
+message SystemOwnerChange {
+  int32 systemId = 1;
+  string owner = 2;
 }
