@@ -166,7 +166,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 			m.galaxy = msg.Galaxy
 		}
 		return m, nil
-	case pb.TickMsg:
+	case *pb.TickMsg:
 		debugLog.Printf("UDP Tick: %s", string(msg.Message))
 		if len(msg.FleetMovements) > 0 {
 			debugLog.Printf("Received %d fleet movements", len(msg.FleetMovements))

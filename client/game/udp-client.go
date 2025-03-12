@@ -21,7 +21,7 @@ type UDPClient struct {
 	session  quic.Connection
 	stream   quic.Stream
 	username string
-	tickCh   chan pb.TickMsg
+	tickCh   chan *pb.TickMsg
 	errorCh  chan ErrorMessage
 }
 
@@ -43,7 +43,7 @@ type GameUpdate struct {
 
 func NewUDPClient() *UDPClient {
 	return &UDPClient{
-		tickCh:  make(chan pb.TickMsg, 10),
+		tickCh:  make(chan *pb.TickMsg, 10),
 		errorCh: make(chan ErrorMessage, 10),
 	}
 }
@@ -102,7 +102,7 @@ func (c *UDPClient) Register(username string) error {
 	return nil
 }
 
-func (c *UDPClient) GetTickChannel() <-chan pb.TickMsg {
+func (c *UDPClient) GetTickChannel() <-chan *pb.TickMsg {
 	return c.tickCh
 }
 
@@ -129,11 +129,12 @@ func (c *UDPClient) handleStream(stream quic.Stream) {
 		switch serverMsg.Type {
 		case "tick":
 			if serverMsg.TickMsg != nil {
-				c.tickCh <- *serverMsg.TickMsg
+				c.tickCh <- serverMsg.TickMsg
 			} else {
-				c.tickCh <- pb.TickMsg{
+				tickMsg := &pb.TickMsg{
 					Message: "UDP Tick Received",
 				}
+				c.tickCh <- tickMsg
 			}
 		case "welcome":
 			log.Println("Registered with UDP server successfully")

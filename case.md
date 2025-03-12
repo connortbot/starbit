@@ -226,3 +226,8 @@ We can also comfortably add a win condition that all systems need to be conquere
 
 > I should just images, huh?
 ![aint it cool](./screenshots/00.png)
+
+## Moving Ships and Updating Clients
+![aint it cool 2](./screenshots/01.png)
+
+We allow the user to input commands. This sends a packet via UDP requesting to move the ship. If it works (otherwise, the server will send an error message back), the server will add it to its next tick message and update all clients simultaneously.
