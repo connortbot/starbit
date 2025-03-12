@@ -170,7 +170,7 @@ After basically creating a mini UI library from scratch to make the boxes and so
 
    Mode: Command
 ```
-> again, no colours
+> again, no colours and idk why the formatting got cooked
 
 ## UDP vs TCP
 A big consideration of this is - if this is a RTS, why are we not using something like QUIC? UDP is infinitely better suited to use cases where real time communication is important.
@@ -264,3 +264,24 @@ And now we add:
     repeated FleetCreation fleetCreations = 7;
   }
 ```
+
+## Logging History
+I was having trouble tracking and seeing events come in, so I added a scrolling viewport that is updated by the tick processor on the client.
+![aint it cool 3](./screenshots/02.png)
+
+I then made some small updates to the Join Game screen.
+
+## Win Condition
+Here is time for some more consideration on how players win. Originally, and something I'm keeping right now, is a win is done by conquering every System in the Galaxy.
+
+We start the server state with a map of usernames -> owned systems. We update this as the game goes along BUT, if any usernames array of owned systems hits a length of galaxy `width * height`, then we have a winner.
+
+Upon this happening, we should:
+1. Send a signal to all clients to show the win.
+2. Terminate all connections, restart everything, clear all states to how it was in the beginning.
+And on the client side,
+3. Return to the Join Game screen and redo all the connections. Reset all state EXCEPT the logging window (to see the win message).
+
+## Unique Colours
+Currently, all the enemies are coloured red. Lets change that.
+![aint this cool 4](./screenshots/03.png)

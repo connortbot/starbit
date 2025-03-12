@@ -50,6 +50,9 @@ type model struct {
 	command   string
 	inspector *ui.ScrollingViewport
 
+	gameLogger *ui.GameLogger
+	logWindow  *ui.ScrollingViewport
+
 	// selection coordinates for galaxy nav
 	selectedX int32
 	selectedY int32
@@ -80,9 +83,11 @@ func (m model) View() string {
 	if m.err != nil {
 		return fmt.Sprintf("Error: %v\nPress Ctrl+C to quit\n", m.err)
 	}
+
 	if !m.joined {
-		return fmt.Sprintf("Enter your name: %s\n", m.username)
+		return ui.RenderJoinScreen(m.username, m.logWindow)
 	}
+
 	selectedSystemIndex := m.selectedY*m.galaxy.Width + m.selectedX
 	return ui.RenderGameScreen(
 		m.username,
@@ -91,6 +96,7 @@ func (m model) View() string {
 		m.galaxy,
 		m.command,
 		m.inspector,
+		m.logWindow,
 		m.selectedX,
 		m.selectedY,
 		m.galaxy.Systems[selectedSystemIndex],
@@ -143,9 +149,15 @@ func main() {
 	}
 	debugLog.Println("TCP client connected successfully")
 
+	gameLogger := ui.NewGameLogger(100) // store up to 100 log messages
+	gameLogger.AddSystemMessage("Welcome to Starbit! Enter your username to join.")
+	logWindow := ui.NewLogWindow(gameLogger, ui.LogBoxWidth, ui.LogBoxHeight)
+
 	p := tea.NewProgram(model{
-		client:    client,
-		udpClient: udpClient,
+		client:     client,
+		udpClient:  udpClient,
+		gameLogger: gameLogger,
+		logWindow:  logWindow,
 	}, tea.WithAltScreen())
 
 	// start listening for both UDP and TCP game updates

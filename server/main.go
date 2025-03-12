@@ -89,11 +89,15 @@ func main() {
 	// create and start UDP server
 	udpServer := game.NewUDPServer(listener)
 	udpServer.SetState(gameState)
-	go udpServer.Start()
 
 	// create and start TCP server
 	tcpServer := game.NewServer()
 	tcpServer.SetState(gameState)
+	udpServer.SetTCPServer(tcpServer)
+
+	go udpServer.Start()
+
+	// Set up and start the TCP server
 	s := grpc.NewServer()
 	pb.RegisterGameServer(s, tcpServer)
 	log.Printf("TCP server listening at %v", lis.Addr())

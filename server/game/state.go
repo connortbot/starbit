@@ -13,7 +13,7 @@ import (
 const (
 	galaxyWidth  = 5
 	galaxyHeight = 5
-	maxPlayers   = 2
+	maxPlayers   = 4
 
 	initialGES = 1000
 	gesPerTick = 2
@@ -31,6 +31,9 @@ type State struct {
 
 	movedFleets     []int32 // fleets who have moved this tick
 	battlingSystems []int32 // systems who are currently battling
+
+	// Map of username -> array of system IDs they own
+	ownedSystems map[string][]int32
 }
 
 func NewState() *State {
@@ -57,8 +60,9 @@ func NewState() *State {
 			Width:   galaxyWidth,
 			Height:  galaxyHeight,
 		},
-		nextFleetID: 1, // start fleet IDs at 1
-		playerGES:   make(map[string]int32),
+		nextFleetID:  1, // start fleet IDs at 1
+		playerGES:    make(map[string]int32),
+		ownedSystems: make(map[string][]int32),
 	}
 }
 
@@ -101,11 +105,23 @@ func (g *State) InitializeGame(players map[string]*pb.Player) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
+	g.ownedSystems = make(map[string][]int32)
+	for name := range players {
+		g.ownedSystems[name] = []int32{}
+	}
+
 	galaxy.InitializeGalaxy(g.Galaxy, players, func() int32 {
 		id := g.nextFleetID
 		g.nextFleetID++
 		return id
 	})
+
+	for _, system := range g.Galaxy.Systems {
+		if system.Owner != "none" {
+			g.ownedSystems[system.Owner] = append(g.ownedSystems[system.Owner], system.Id)
+		}
+	}
+
 	g.Started = true
 }
 
@@ -153,7 +169,9 @@ func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) (*pb
 	g.movedFleets = append(g.movedFleets, fleetMovement.FleetId)
 
 	if galaxy.ShouldBattleBegin(g.Galaxy, fleetMovement.ToSystemId) {
-		g.battlingSystems = append(g.battlingSystems, fleetMovement.ToSystemId)
+		if !slices.Contains(g.battlingSystems, fleetMovement.ToSystemId) {
+			g.battlingSystems = append(g.battlingSystems, fleetMovement.ToSystemId)
+		}
 		return g.SetSystemOwner(fleetMovement.ToSystemId, "none")
 	}
 
@@ -189,8 +207,28 @@ func (g *State) SetSystemOwner(systemId int32, owner string) (*pb.SystemOwnerCha
 		return nil, fmt.Errorf("system with ID %d not found", systemId)
 	}
 
-	if g.Galaxy.Systems[systemId].Owner != owner {
+	currentOwner := g.Galaxy.Systems[systemId].Owner
+	if currentOwner != owner {
 		g.Galaxy.Systems[systemId].Owner = owner
+
+		// update owned systems tracking
+		if currentOwner != "none" {
+			// remove system from previous owner's list
+			for i, sys := range g.ownedSystems[currentOwner] {
+				if sys == systemId {
+					g.ownedSystems[currentOwner] = append(g.ownedSystems[currentOwner][:i], g.ownedSystems[currentOwner][i+1:]...)
+					break
+				}
+			}
+		}
+
+		// add system to new owner's list (if not "none")
+		if owner != "none" {
+			if _, exists := g.ownedSystems[owner]; !exists {
+				g.ownedSystems[owner] = []int32{}
+			}
+			g.ownedSystems[owner] = append(g.ownedSystems[owner], systemId)
+		}
 
 		return &pb.SystemOwnerChange{
 			SystemId: systemId,

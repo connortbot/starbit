@@ -72,6 +72,7 @@ message TickMsg {
   repeated SystemOwnerChange systemOwnerChanges = 5;
   repeated GESUpdate gesUpdates = 6;
   repeated FleetCreation fleetCreations = 7;
+  GameVictory victory = 8;
 }
 
 message FleetMovement {
@@ -107,4 +108,8 @@ message FleetCreation {
   int32 fleetId = 3;
   int32 attack = 4;
   int32 health = 5;
+}
+
+message GameVictory {
+  string winner = 1;
 }

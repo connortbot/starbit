@@ -2,6 +2,7 @@ package galaxy
 
 import (
 	"math/rand"
+	"slices"
 	pb "starbit/proto"
 	fleets "starbit/server/game/fleets"
 )
@@ -52,8 +53,15 @@ func InitializeGalaxy(galaxy *pb.GalaxyState, players map[string]*pb.Player, gen
 	}
 }
 
-func SetSystemOwner(galaxy *pb.GalaxyState, id int32, owner string) {
-	galaxy.Systems[id].Owner = owner
+func SetSystemOwner(galaxy *pb.GalaxyState, id int32, owner string) *pb.SystemOwnerChange {
+	if galaxy.Systems[id].Owner != owner {
+		galaxy.Systems[id].Owner = owner
+		return &pb.SystemOwnerChange{
+			SystemId: id,
+			Owner:    owner,
+		}
+	}
+	return nil
 }
 
 func AddFleetToSystem(galaxy *pb.GalaxyState, id int32, fleet *pb.Fleet) {
@@ -66,7 +74,7 @@ func ShouldBattleBegin(galaxy *pb.GalaxyState, systemId int32) bool {
 	ownerMap := make(map[string]bool)
 
 	for _, fleet := range system.Fleets {
-		if fleet.Owner != "" {
+		if fleet.Owner != "" && fleet.Health > 0 {
 			ownerMap[fleet.Owner] = true
 		}
 	}
@@ -77,55 +85,99 @@ func ExecuteBattle(galaxy *pb.GalaxyState, systemId int32) (bool, []*pb.HealthUp
 	system := galaxy.Systems[systemId]
 	updates := []*pb.HealthUpdate{}
 	destroyed := []*pb.FleetDestroyed{}
+	updatedFleets := []*pb.Fleet{}
+
+	battleActive, newOwner := DetermineSystemOwner(galaxy, systemId)
+	if !battleActive {
+		return battleActive, updates, destroyed, newOwner
+	}
 
 	// group fleets by owner
-	fleetsByOwner := make(map[string][]*pb.Fleet)
+	simpleFleetsByOwner := make(map[string][]*pb.Fleet)
 	for _, fleet := range system.Fleets {
 		if fleet.Health > 0 {
-			fleetsByOwner[fleet.Owner] = append(fleetsByOwner[fleet.Owner], fleet)
+			simpleFleetsByOwner[fleet.Owner] = append(simpleFleetsByOwner[fleet.Owner], fleet)
 		}
 	}
 
-	// each fleet attacks a random enemy fleet
-	for owner, fleets := range fleetsByOwner {
-		for _, attackingFleet := range fleets {
-			// create list of potential targets (fleets from other owners)
-			potentialTargets := []*pb.Fleet{}
-			for targetOwner, targetFleets := range fleetsByOwner {
-				if targetOwner != owner {
-					potentialTargets = append(potentialTargets, targetFleets...)
-				}
-			}
+	type FleetGroups struct {
+		Own   []*pb.Fleet
+		Enemy []*pb.Fleet
+	}
+	fleetsByOwner := make(map[string]*FleetGroups)
 
-			if len(potentialTargets) > 0 {
-				// choose a random target
-				targetIndex := int(randomInt32(0, int32(len(potentialTargets))))
-				targetFleet := potentialTargets[targetIndex]
+	for owner := range simpleFleetsByOwner {
+		fleetsByOwner[owner] = &FleetGroups{
+			Own:   simpleFleetsByOwner[owner],
+			Enemy: make([]*pb.Fleet, 0),
+		}
+	}
 
-				targetFleet.Health -= attackingFleet.Attack
-				if targetFleet.Health <= 0 {
-					targetFleet.Health = 0
-					destroyed = append(destroyed, &pb.FleetDestroyed{
-						FleetId:  targetFleet.Id,
-						SystemId: systemId,
-					})
-					for i, fleet := range system.Fleets {
-						if fleet.Id == targetFleet.Id {
-							system.Fleets = append(system.Fleets[:i], system.Fleets[i+1:]...)
-							break
-						}
-					}
-				}
-
-				updates = append(updates, &pb.HealthUpdate{
-					FleetId:  targetFleet.Id,
-					Health:   targetFleet.Health,
-					SystemId: systemId,
-				})
+	for owner, groups := range fleetsByOwner {
+		for enemyOwner, enemyFleets := range simpleFleetsByOwner {
+			if enemyOwner != owner {
+				groups.Enemy = append(groups.Enemy, enemyFleets...)
 			}
 		}
 	}
 
+	for _, groups := range fleetsByOwner {
+		for _, fleet := range groups.Own {
+			if len(groups.Enemy) == 0 {
+				continue // skip if no enemies to attack
+			}
+			enemyIndex := randomInt32(0, int32(len(groups.Enemy)))
+			enemyFleet := groups.Enemy[enemyIndex]
+
+			enemyFleet.Health -= fleet.Attack
+
+			if !slices.Contains(updatedFleets, enemyFleet) {
+				updatedFleets = append(updatedFleets, enemyFleet)
+			}
+		}
+	}
+
+	fleetsToRemove := []*pb.Fleet{}
+	for _, fleet := range updatedFleets {
+		if fleet.Health <= 0 {
+			destroyed = append(destroyed, &pb.FleetDestroyed{
+				FleetId:  fleet.Id,
+				SystemId: systemId,
+			})
+			fleetsToRemove = append(fleetsToRemove, fleet)
+		} else {
+			updates = append(updates, &pb.HealthUpdate{
+				FleetId:  fleet.Id,
+				Health:   fleet.Health,
+				SystemId: systemId,
+			})
+		}
+	}
+
+	// Remove destroyed fleets from the system
+	if len(fleetsToRemove) > 0 {
+		newFleets := make([]*pb.Fleet, 0, len(system.Fleets)-len(fleetsToRemove))
+		for _, fleet := range system.Fleets {
+			shouldRemove := false
+			for _, deadFleet := range fleetsToRemove {
+				if fleet.Id == deadFleet.Id {
+					shouldRemove = true
+					break
+				}
+			}
+			if !shouldRemove {
+				newFleets = append(newFleets, fleet)
+			}
+		}
+		system.Fleets = newFleets
+	}
+
+	battleActive, newOwner = DetermineSystemOwner(galaxy, systemId)
+	return battleActive, updates, destroyed, newOwner
+}
+
+func DetermineSystemOwner(galaxy *pb.GalaxyState, systemId int32) (bool, string) {
+	system := galaxy.Systems[systemId]
 	battleActive := ShouldBattleBegin(galaxy, systemId)
 
 	newOwner := ""
@@ -147,12 +199,14 @@ func ExecuteBattle(galaxy *pb.GalaxyState, systemId int32) (bool, []*pb.HealthUp
 		}
 	}
 
-	return battleActive, updates, destroyed, newOwner
+	return battleActive, newOwner
 }
 
 func randomInt32(min, max int32) int32 {
 	if min == max {
 		return min
 	}
-	return min + int32(float64(max-min)*rand.Float64())
+	// for array indices, we want to generate a number in range [min, max)
+	// where the upper bound is exclusive
+	return min + rand.Int31n(max-min)
 }

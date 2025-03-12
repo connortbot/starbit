@@ -16,12 +16,13 @@ import (
 )
 
 type UDPServer struct {
-	listener *quic.Listener
-	state    *State
-	ticker   *time.Ticker
-	clients  map[quic.Connection]map[quic.Stream]string // map conn->streams->username
-	mu       sync.Mutex
-	done     chan struct{}
+	listener  *quic.Listener
+	state     *State
+	tcpServer *Server // reference to TCP server for state syncing
+	ticker    *time.Ticker
+	clients   map[quic.Connection]map[quic.Stream]string // map conn->streams->username
+	mu        sync.Mutex
+	done      chan struct{}
 
 	tickMessage *pb.TickMsg
 }
@@ -29,7 +30,7 @@ type UDPServer struct {
 func NewUDPServer(listener *quic.Listener) *UDPServer {
 	return &UDPServer{
 		listener:    listener,
-		ticker:      time.NewTicker(1 * time.Second),
+		ticker:      time.NewTicker(500 * time.Millisecond),
 		clients:     make(map[quic.Connection]map[quic.Stream]string),
 		done:        make(chan struct{}),
 		tickMessage: &pb.TickMsg{},
@@ -39,6 +40,10 @@ func NewUDPServer(listener *quic.Listener) *UDPServer {
 // shared state setter
 func (s *UDPServer) SetState(state *State) {
 	s.state = state
+}
+
+func (s *UDPServer) SetTCPServer(tcpServer *Server) {
+	s.tcpServer = tcpServer
 }
 
 func (s *UDPServer) Start() {
@@ -234,8 +239,32 @@ func (s *UDPServer) broadcastTicks() {
 			s.state.mu.Lock()
 
 			remainingBattlingSystems := []int32{}
+
+			log.Printf("Processing %d battling systems: %v", len(s.state.battlingSystems), s.state.battlingSystems)
+
+			systemCount := make(map[int32]int)
+			for _, id := range s.state.battlingSystems {
+				systemCount[id]++
+			}
+
+			for id, count := range systemCount {
+				if count > 1 {
+					log.Printf("WARNING: System %d appears %d times in battlingSystems!", id, count)
+				}
+			}
+
+			processedSystemIds := make(map[int32]bool)
+
 			for _, systemId := range s.state.battlingSystems {
+				if processedSystemIds[systemId] {
+					log.Printf("Skipping duplicate processing of system %d", systemId)
+					continue
+				}
+
+				processedSystemIds[systemId] = true
+
 				// Process battles
+				log.Printf("Processing battle for system %d", systemId)
 				battleActive, healthUpdates, fleetsDestroyed, newOwner := galaxy.ExecuteBattle(s.state.Galaxy, systemId)
 
 				// Process health updates
@@ -291,6 +320,16 @@ func (s *UDPServer) broadcastTicks() {
 				s.tickMessage.SystemOwnerChanges = updatedChanges
 			}
 
+			// check for win conditions
+			var victor string
+			totalSystems := s.state.Galaxy.Width * s.state.Galaxy.Height
+			for player, systems := range s.state.ownedSystems {
+				if int32(len(systems)) == totalSystems {
+					victor = player
+					break
+				}
+			}
+
 			s.state.battlingSystems = remainingBattlingSystems
 
 			baseTickMsg := &pb.TickMsg{
@@ -301,6 +340,48 @@ func (s *UDPServer) broadcastTicks() {
 				FleetCreations:     s.tickMessage.FleetCreations,
 			}
 
+			// Handle victory case
+			if victor != "" {
+				victory := &pb.GameVictory{
+					Winner: victor,
+				}
+				log.Printf("GAME OVER: %s has conquered the galaxy!", victor)
+
+				baseTickMsg.Victory = victory
+				s.state.mu.Unlock()
+				newState := NewState()
+				newState.Started = false
+				s.state = newState
+
+				if s.tcpServer != nil {
+					s.tcpServer.SetState(newState)
+					log.Printf("Game reset: Updated both UDP and TCP servers with new state (Started=%v)", newState.Started)
+				} else {
+					log.Printf("Warning: TCP server reference not available, only UDP state was reset")
+				}
+
+				// Send the final game state with victory notif to all clients
+				for _, streams := range s.clients {
+					for stream, username := range streams {
+						update := ServerMessage{
+							Type:    "tick",
+							TickMsg: baseTickMsg,
+						}
+
+						jsonUpdate, _ := json.Marshal(update)
+						if _, err := stream.Write(jsonUpdate); err != nil {
+							log.Printf("Error sending victory notification to %s: %v", username, err)
+						}
+					}
+				}
+
+				s.tickMessage = &pb.TickMsg{}
+				s.mu.Unlock()
+
+				// start new tick with new state
+				continue
+			}
+
 			for _, streams := range s.clients {
 				for stream, username := range streams {
 					clientTickMsg := &pb.TickMsg{
@@ -309,6 +390,7 @@ func (s *UDPServer) broadcastTicks() {
 						FleetDestroyed:     baseTickMsg.FleetDestroyed,
 						SystemOwnerChanges: baseTickMsg.SystemOwnerChanges,
 						FleetCreations:     baseTickMsg.FleetCreations,
+						Victory:            baseTickMsg.Victory,
 					}
 
 					if username != "" {

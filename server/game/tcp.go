@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	pb "starbit/proto"
+	"errors"
 )
 
 type Server struct {
@@ -29,6 +30,12 @@ func (s *Server) SetState(state *State) {
 
 func (s *Server) JoinGame(ctx context.Context, req *pb.JoinRequest) (*pb.JoinResponse, error) {
 	s.mu.Lock()
+
+	if s.state.Started {
+		s.mu.Unlock()
+		return nil, errors.New("game already started")
+	}
+
 	full, err := s.state.AddPlayer(req.Username)
 	if err != nil {
 		s.mu.Unlock()

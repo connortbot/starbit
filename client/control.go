@@ -56,6 +56,12 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.inspector = ui.NewInspectWindow(ui.InspectorWidth, m.galaxy.Systems[0])
 				m.controlMode = CommandMode
 
+				m.gameLogger.AddSystemMessage(fmt.Sprintf("%s joined the game", m.username))
+				m.logWindow = ui.NewLogWindow(m.gameLogger, ui.LogBoxWidth, ui.LogBoxHeight)
+
+				if resp.Started {
+					m.gameLogger.AddSystemMessage("Game started")
+				}
 				// log
 				debugLog.Printf("Joined game successfully. Started: %v, Players: %d",
 					m.started, m.playerCount)
@@ -77,6 +83,9 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 		m.players = msg.Players
 		if msg.Galaxy != nil {
 			m.galaxy = msg.Galaxy
+		}
+		if msg.Started {
+			m.gameLogger.AddSystemMessage("Game started")
 		}
 		return m, nil
 	}
@@ -140,9 +149,13 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				result := game.ParseCommand(m.udpClient, m.command)
 				if result.Success {
 					debugLog.Printf("Command successful: %s", result.Message)
+					m.gameLogger.AddCommand(m.username, m.command, true)
+					ui.UpdateLogWindow(m.logWindow, m.gameLogger)
 					m.command = ""
 				} else {
 					debugLog.Printf("Command failed: %s", result.Message)
+					m.gameLogger.AddCommand(m.username, m.command, false)
+					ui.UpdateLogWindow(m.logWindow, m.gameLogger)
 				}
 			}
 		case "backspace":
@@ -177,6 +190,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				} else {
 					debugLog.Printf("Fleet %d moved from system %d to system %d",
 						movement.FleetId, movement.FromSystemId, movement.ToSystemId)
+					m.gameLogger.AddFleetMovement(movement)
 				}
 			}
 		}
@@ -190,6 +204,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				} else {
 					debugLog.Printf("Fleet %d health updated to %d in system %d",
 						update.FleetId, update.Health, update.SystemId)
+					m.gameLogger.AddHealthUpdate(update)
 				}
 			}
 		}
@@ -203,6 +218,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				} else {
 					debugLog.Printf("Fleet %d was destroyed in system %d",
 						destroyed.FleetId, destroyed.SystemId)
+					m.gameLogger.AddFleetDestroyed(destroyed)
 				}
 			}
 		}
@@ -216,6 +232,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				} else {
 					debugLog.Printf("System %d owner changed to %s",
 						change.SystemId, change.Owner)
+					m.gameLogger.AddSystemOwnerChange(change)
 				}
 			}
 		}
@@ -234,13 +251,48 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				err := game.ProcessFleetCreation(m.galaxy, creation)
 				if err != nil {
 					debugLog.Printf("Error processing fleet creation: %v", err)
+				} else {
+					debugLog.Printf("Fleet created with ID %d in system %d by %s",
+						creation.FleetId, creation.SystemId, creation.Owner)
+					m.gameLogger.AddFleetCreation(creation)
 				}
 			}
 		}
+
+		if msg.Victory != nil {
+			debugLog.Printf("Game victory: %s has won!", msg.Victory.Winner)
+			m.gameLogger.AddVictory(msg.Victory)
+			ui.UpdateLogWindow(m.logWindow, m.gameLogger)
+
+			time.Sleep(2 * time.Second)
+
+			// Reset to initial state, preserving only logs and connections
+			m.username = ""
+			m.started = false
+			m.joined = false
+			m.playerCount = 0
+			m.players = make(map[string]*pb.Player)
+			m.galaxy = nil
+			m.command = ""
+			m.gesAmount = 0
+			m.selectedX = 0
+			m.selectedY = 0
+			m.inspector = nil
+			ui.ResetEnemyColors()
+
+			m.gameLogger.AddSystemMessage("Game has been reset. Enter your name to play again.")
+			ui.UpdateLogWindow(m.logWindow, m.gameLogger)
+
+			return m, nil
+		}
+		ui.UpdateLogWindow(m.logWindow, m.gameLogger)
+
 		return m, nil
 	case game.ErrorMessage:
 		debugLog.Printf("Error from server: %s", msg.Content)
 		m.command = fmt.Sprintf("ERROR: %s", msg.Content)
+		m.gameLogger.AddSystemMessage(fmt.Sprintf("Error: %s", msg.Content))
+		ui.UpdateLogWindow(m.logWindow, m.gameLogger)
 		return m, nil
 	}
 	return m, nil

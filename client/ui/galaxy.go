@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	pb "starbit/proto"
@@ -16,11 +17,55 @@ var (
 			Foreground(lipgloss.Color("#777777"))
 	systemRedStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FF5555"))
+	systemPurpleStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#AA55FF"))
+	systemOrangeStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FF9900"))
 	selectedStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FFFF00"))
+
+	enemyColorMap map[string]lipgloss.Style
 )
 
+func ResetEnemyColors() {
+	enemyColorMap = nil
+}
+
+// InitializeEnemyColors creates a consistent color mapping for enemy players
+// this should be called once when the galaxy state is first received
+func InitializeEnemyColors(galaxy *pb.GalaxyState, myUsername string) {
+	enemyColorMap = make(map[string]lipgloss.Style)
+
+	uniqueOwners := make(map[string]bool)
+	for _, system := range galaxy.Systems {
+		if system.Owner != myUsername && system.Owner != "none" {
+			uniqueOwners[system.Owner] = true
+		}
+	}
+
+	sortedOwners := make([]string, 0, len(uniqueOwners))
+	for owner := range uniqueOwners {
+		sortedOwners = append(sortedOwners, owner)
+	}
+	sort.Strings(sortedOwners)
+
+	// available enemy colors
+	enemyColors := []lipgloss.Style{systemRedStyle, systemPurpleStyle, systemOrangeStyle}
+
+	for i, owner := range sortedOwners {
+		if i < len(enemyColors) {
+			enemyColorMap[owner] = enemyColors[i]
+		} else {
+			enemyColorMap[owner] = systemRedStyle
+		}
+	}
+}
+
 func RenderGalaxy(galaxy *pb.GalaxyState, username string, selectedX, selectedY int32) string {
+	if enemyColorMap == nil {
+		InitializeEnemyColors(galaxy, username)
+	}
+
 	var s strings.Builder
 	rows := make(map[int32][]*pb.System)
 	var maxY, maxX int32
@@ -74,7 +119,11 @@ func RenderGalaxy(galaxy *pb.GalaxyState, username string, selectedX, selectedY 
 			case system.Owner == "none":
 				s.WriteString(systemGreyStyle.Render(symbol))
 			default:
-				s.WriteString(systemRedStyle.Render(symbol))
+				if style, ok := enemyColorMap[system.Owner]; ok {
+					s.WriteString(style.Render(symbol))
+				} else {
+					s.WriteString(systemRedStyle.Render(symbol))
+				}
 			}
 		}
 		s.WriteString("\n")
@@ -104,7 +153,11 @@ func RenderGalaxy(galaxy *pb.GalaxyState, username string, selectedX, selectedY 
 			case system.Owner == "none":
 				s.WriteString(systemGreyStyle.Render(idStr))
 			default:
-				s.WriteString(systemRedStyle.Render(idStr))
+				if style, ok := enemyColorMap[system.Owner]; ok {
+					s.WriteString(style.Render(idStr))
+				} else {
+					s.WriteString(systemRedStyle.Render(idStr))
+				}
 			}
 		}
 		s.WriteString("\n")
