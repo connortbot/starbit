@@ -24,6 +24,7 @@ const (
 var (
 	redStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))
 	greenStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00"))
+	boldStyle  = lipgloss.NewStyle().Bold(true)
 )
 
 func RenderCommandLine(command string) string {

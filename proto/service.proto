@@ -57,7 +57,20 @@ message GameUpdate {
 }
 
 message Fleet {
-  string owner = 1;
-  int32 attack = 2;
-  int32 health = 3;
+  int32 id = 1;
+  string owner = 2;
+  int32 attack = 3;
+  int32 health = 4;
+}
+
+// UDP TYPES, NOT USED FOR TCP GRPC
+message TickMsg {
+  string message = 1;
+  repeated FleetMovement fleetMovements = 2;
+}
+
+message FleetMovement {
+  int32 fleetId = 1;
+  int32 fromSystemId = 2;
+  int32 toSystemId = 3;
 }

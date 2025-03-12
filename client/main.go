@@ -104,6 +104,13 @@ func listenForUDPTicks(udpClient *game.UDPClient, p *tea.Program) {
 	}
 }
 
+func listenForUDPErrors(udpClient *game.UDPClient, p *tea.Program) {
+	errorCh := udpClient.GetErrorChannel()
+	for errorMsg := range errorCh {
+		p.Send(errorMsg)
+	}
+}
+
 // receives game state updates from the TCP server
 func listenForTCPUpdates(client *game.Client, p *tea.Program) {
 	updateCh := client.GetUpdateChannel()
@@ -140,6 +147,7 @@ func main() {
 
 	// start listening for both UDP and TCP game updates
 	go listenForUDPTicks(udpClient, p)
+	go listenForUDPErrors(udpClient, p)
 	go listenForTCPUpdates(client, p)
 
 	// run the UI

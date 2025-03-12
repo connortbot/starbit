@@ -7,6 +7,11 @@ import (
 
 	"time"
 
+	pb "starbit/proto"
+
+	"fmt"
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -74,9 +79,6 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 			m.galaxy = msg.Galaxy
 		}
 		return m, nil
-	case game.UDPTickMsg:
-		debugLog.Printf("Menu UDP Tick: %s", string(msg))
-		return m, nil
 	}
 	return m, nil
 }
@@ -133,8 +135,15 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				}
 			}
 		case "enter":
-			if m.controlMode == CommandMode {
-				debugLog.Printf("Enter: %s", m.command)
+			if m.controlMode == CommandMode && m.command != "" {
+				debugLog.Printf("Processing command: %s", m.command)
+				result := game.ParseCommand(m.udpClient, m.command)
+				if result.Success {
+					debugLog.Printf("Command successful: %s", result.Message)
+					m.command = ""
+				} else {
+					debugLog.Printf("Command failed: %s", result.Message)
+				}
 			}
 		case "backspace":
 			if m.controlMode == CommandMode && len(m.command) > 0 {
@@ -142,7 +151,11 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 			}
 		default:
 			if m.controlMode == CommandMode && len(msg.String()) == 1 {
-				m.command += msg.String()
+				if strings.HasPrefix(m.command, "ERROR: ") {
+					m.command = msg.String()
+				} else {
+					m.command += msg.String()
+				}
 			}
 		}
 	case game.GameMsg:
@@ -153,8 +166,24 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 			m.galaxy = msg.Galaxy
 		}
 		return m, nil
-	case game.UDPTickMsg:
-		debugLog.Printf("UDP Tick: %s", string(msg))
+	case pb.TickMsg:
+		debugLog.Printf("UDP Tick: %s", string(msg.Message))
+		if len(msg.FleetMovements) > 0 {
+			debugLog.Printf("Received %d fleet movements", len(msg.FleetMovements))
+			for _, movement := range msg.FleetMovements {
+				err := game.MoveFleet(m.galaxy, movement)
+				if err != nil {
+					debugLog.Printf("Error processing fleet movement: %v", err)
+				} else {
+					debugLog.Printf("Fleet %d moved from system %d to system %d",
+						movement.FleetId, movement.FromSystemId, movement.ToSystemId)
+				}
+			}
+		}
+		return m, nil
+	case game.ErrorMessage:
+		debugLog.Printf("Error from server: %s", msg.Content)
+		m.command = fmt.Sprintf("ERROR: %s", msg.Content)
 		return m, nil
 	}
 	return m, nil

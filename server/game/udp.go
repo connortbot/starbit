@@ -19,14 +19,17 @@ type UDPServer struct {
 	clients  map[quic.Connection]map[quic.Stream]string // map conn->streams->username
 	mu       sync.Mutex
 	done     chan struct{}
+
+	tickMessage *pb.TickMsg
 }
 
 func NewUDPServer(listener *quic.Listener) *UDPServer {
 	return &UDPServer{
-		listener: listener,
-		ticker:   time.NewTicker(3 * time.Second),
-		clients:  make(map[quic.Connection]map[quic.Stream]string),
-		done:     make(chan struct{}),
+		listener:    listener,
+		ticker:      time.NewTicker(3 * time.Second),
+		clients:     make(map[quic.Connection]map[quic.Stream]string),
+		done:        make(chan struct{}),
+		tickMessage: &pb.TickMsg{},
 	}
 }
 
@@ -69,17 +72,17 @@ func (s *UDPServer) handleConn(conn quic.Connection) {
 	}
 }
 
-// message struct for client-server comms
-type Message struct {
-	Type     string `json:"type"`
-	Username string `json:"username,omitempty"`
-	Content  string `json:"content,omitempty"`
+type ServerMessage struct {
+	Type     string      `json:"type"`
+	Username string      `json:"username,omitempty"`
+	Content  string      `json:"content,omitempty"`
+	TickMsg  *pb.TickMsg `json:"tickMsg,omitempty"`
 }
 
 func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 	defer stream.Close()
 
-	buf := make([]byte, 1024)
+	buf := make([]byte, 2048)
 	for {
 		n, err := stream.Read(buf)
 		if err != nil {
@@ -91,7 +94,7 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 		}
 
 		// decode message
-		var msg Message
+		var msg ServerMessage
 		if err := json.Unmarshal(buf[:n], &msg); err != nil {
 			log.Printf("Message decode error: %v", err)
 			continue
@@ -106,9 +109,30 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 			s.mu.Unlock()
 
 			// send welcome message
-			response := Message{Type: "welcome", Content: "Welcome to the game!"}
+			response := ServerMessage{Type: "welcome", Content: "Welcome to the game!"}
 			jsonResp, _ := json.Marshal(response)
 			stream.Write(jsonResp)
+
+		case "fleet_movement":
+			if msg.TickMsg != nil && len(msg.TickMsg.FleetMovements) > 0 {
+				err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0])
+				if err != nil {
+					log.Printf("Error moving fleet: %v", err)
+
+					errorMsg := ServerMessage{
+						Type:     "error",
+						Content:  err.Error(),
+						Username: msg.Username,
+					}
+
+					jsonError, _ := json.Marshal(errorMsg)
+					stream.Write(jsonError)
+				} else {
+					s.mu.Lock()
+					s.tickMessage.FleetMovements = append(s.tickMessage.FleetMovements, msg.TickMsg.FleetMovements[0])
+					s.mu.Unlock()
+				}
+			}
 		}
 	}
 }
@@ -127,19 +151,10 @@ func (s *UDPServer) broadcastTicks() {
 			s.mu.Lock()
 			s.state.mu.Lock()
 
-			// create update (never include galaxy data)
-			update := struct {
-				Type        string                `json:"type"`
-				PlayerCount int32                 `json:"playerCount"`
-				Players     map[string]*pb.Player `json:"players"`
-				Started     bool                  `json:"started"`
-			}{
-				Type:        "tick",
-				PlayerCount: s.state.PlayerCount,
-				Players:     s.state.Players,
-				Started:     s.state.Started,
+			update := ServerMessage{
+				Type:    "tick",
+				TickMsg: s.tickMessage,
 			}
-
 			jsonUpdate, _ := json.Marshal(update)
 
 			// send to all connected clients
@@ -150,6 +165,7 @@ func (s *UDPServer) broadcastTicks() {
 					}
 				}
 			}
+			s.tickMessage = &pb.TickMsg{}
 
 			s.state.mu.Unlock()
 			s.mu.Unlock()

@@ -26,6 +26,9 @@ func renderHealthBar(current, max int32, width int) string {
 func RenderFleet(fleet *pb.Fleet, width int) string {
 	var s strings.Builder
 
+	idText := fmt.Sprintf("Fleet ID: %d", fleet.Id)
+	s.WriteString(boldStyle.Render(idText) + "\n\n")
+
 	healthBar := renderHealthBar(fleet.Health, 100, width-10)
 	s.WriteString(fmt.Sprintf("HP: %s %d\n\n", healthBar, fleet.Health))
 	ownerBox := fmt.Sprintf("Owner: %s", fleet.Owner)

@@ -21,6 +21,7 @@ type State struct {
 	Started     bool
 	Galaxy      *pb.GalaxyState
 	mu          sync.Mutex
+	nextFleetID int32
 }
 
 func NewState() *State {
@@ -47,6 +48,7 @@ func NewState() *State {
 			Width:   galaxyWidth,
 			Height:  galaxyHeight,
 		},
+		nextFleetID: 1, // start fleet IDs at 1
 	}
 }
 
@@ -87,6 +89,50 @@ func (g *State) InitializeGame(players map[string]*pb.Player) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	galaxy.InitializeGalaxy(g.Galaxy, players)
+	galaxy.InitializeGalaxy(g.Galaxy, players, func() int32 {
+		id := g.nextFleetID
+		g.nextFleetID++
+		return id
+	})
 	g.Started = true
+}
+
+func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	if fleetMovement.FromSystemId < 0 || fleetMovement.FromSystemId >= int32(len(g.Galaxy.Systems)) {
+		return fmt.Errorf("source system with ID %d not found", fleetMovement.FromSystemId)
+	}
+	if fleetMovement.ToSystemId < 0 || fleetMovement.ToSystemId >= int32(len(g.Galaxy.Systems)) {
+		return fmt.Errorf("destination system with ID %d not found", fleetMovement.ToSystemId)
+	}
+
+	sourceSystem := g.Galaxy.Systems[fleetMovement.FromSystemId]
+	destSystem := g.Galaxy.Systems[fleetMovement.ToSystemId]
+
+	var fleet *pb.Fleet
+	var fleetIndex int
+	for i, f := range sourceSystem.Fleets {
+		if f.Id == fleetMovement.FleetId {
+			fleet = f
+			fleetIndex = i
+			break
+		}
+	}
+
+	if fleet == nil {
+		return fmt.Errorf("fleet ID %d not found in system ID %d",
+			fleetMovement.FleetId, fleetMovement.FromSystemId)
+	}
+
+	if fleet.Owner != username {
+		return fmt.Errorf("fleet %d is not owned by %s", fleetMovement.FleetId, username)
+	}
+
+	// remove from source system
+	sourceSystem.Fleets = append(sourceSystem.Fleets[:fleetIndex], sourceSystem.Fleets[fleetIndex+1:]...)
+	// add to destination system
+	destSystem.Fleets = append(destSystem.Fleets, fleet)
+	return nil
 }
