@@ -23,19 +23,20 @@ rm go1.23.0.linux-amd64.tar.gz
 
 # Set up Go environment
 echo "Setting up Go environment..."
-echo 'export PATH=$PATH:/usr/local/go/bin:$(go env GOPATH)/bin' >> ~/.bashrc
 export PATH=$PATH:/usr/local/go/bin:$(go env GOPATH)/bin
+echo 'export PATH=$PATH:/usr/local/go/bin:$(go env GOPATH)/bin' >> ~/.bashrc
 
-# Verify Go installation
-go version
+echo "Verifying Go installation..."
+/usr/local/go/bin/go version
 
 # Install Go protobuf plugins
 echo "Installing protobuf plugins..."
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+/usr/local/go/bin/go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+/usr/local/go/bin/go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 # Generate protobuf files
 echo "Generating protobuf files..."
+export PATH=$PATH:$(go env GOPATH)/bin
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/service.proto
 
 # Make run_server.sh executable
