@@ -13,11 +13,18 @@ import (
 const (
 	galaxyWidth  = 5
 	galaxyHeight = 5
-	maxPlayers   = 4
 
 	initialGES = 1000
 	gesPerTick = 2
 )
+
+var MaxPlayers int32 = 4
+
+func SetMaxPlayers(n int32) {
+	if n > 0 {
+		MaxPlayers = n
+	}
+}
 
 type State struct {
 	PlayerCount int32
@@ -70,8 +77,8 @@ func (g *State) AddPlayer(name string) (bool, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	if len(g.Players) >= maxPlayers {
-		return true, fmt.Errorf("game is full (max %d players)", maxPlayers)
+	if int32(len(g.Players)) >= MaxPlayers {
+		return true, fmt.Errorf("game is full (max %d players)", MaxPlayers)
 	}
 
 	if _, exists := g.Players[name]; exists {
@@ -86,7 +93,7 @@ func (g *State) AddPlayer(name string) (bool, error) {
 
 	g.playerGES[name] = initialGES
 
-	if len(g.Players) == maxPlayers {
+	if int32(len(g.Players)) == MaxPlayers {
 		g.Started = true
 		return true, nil
 	}

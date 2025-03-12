@@ -5,8 +5,8 @@ import (
 	"log"
 	"sync"
 
-	pb "starbit/proto"
 	"errors"
+	pb "starbit/proto"
 )
 
 type Server struct {

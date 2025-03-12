@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"flag"
 	"log"
 	"math/big"
 	"net"
@@ -68,6 +69,11 @@ func generateTLSConfig() *tls.Config {
 }
 
 func main() {
+	maxPlayersPtr := flag.Int("maxPlayers", 4, "Maximum number of players allowed in the game")
+	flag.Parse()
+	game.SetMaxPlayers(int32(*maxPlayersPtr))
+	log.Printf("Setting maximum players to: %d", *maxPlayersPtr)
+
 	// TCP setup - bind to all interfaces
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {
