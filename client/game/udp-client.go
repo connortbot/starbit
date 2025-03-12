@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"log"
 	"fmt"
+	"log"
 	"time"
 
 	pb "starbit/proto"
@@ -82,7 +82,45 @@ func (c *UDPClient) Connect() error {
 
 	c.stream = stream
 	go c.handleStream(stream)
+
+	go c.keepAlive()
+
 	return nil
+}
+
+// prevent timeout
+func (c *UDPClient) keepAlive() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if c.stream == nil {
+				return
+			}
+
+			msg := ServerMessage{
+				Type: "ping",
+			}
+
+			if c.username != "" {
+				msg.Username = c.username
+			}
+
+			jsonMsg, err := json.Marshal(msg)
+			if err != nil {
+				log.Printf("Failed to marshal ping message: %v", err)
+				continue
+			}
+
+			_, err = c.stream.Write(jsonMsg)
+			if err != nil {
+				log.Printf("Failed to send ping: %v", err)
+				return
+			}
+		}
+	}
 }
 
 func (c *UDPClient) Register(username string) error {
@@ -150,6 +188,9 @@ func (c *UDPClient) handleStream(stream quic.Stream) {
 			}
 		case "welcome":
 			log.Println("Registered with UDP server successfully")
+		case "pong":
+			// nothing happens here, but i guess to check if the server is alive
+			// you could print sum here
 		case "error":
 			log.Printf("Error from server: %s", serverMsg.Content)
 			c.errorCh <- ErrorMessage{

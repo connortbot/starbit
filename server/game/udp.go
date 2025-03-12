@@ -121,6 +121,16 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 			jsonResp, _ := json.Marshal(response)
 			stream.Write(jsonResp)
 
+		case "ping":
+			if msg.Username != "" {
+				log.Printf("Received ping from %s", msg.Username)
+			} else {
+				log.Printf("Received ping from unregistered client")
+			}
+			response := ServerMessage{Type: "pong"}
+			jsonResp, _ := json.Marshal(response)
+			stream.Write(jsonResp)
+
 		case "fleet_movement":
 			if msg.TickMsg != nil && len(msg.TickMsg.FleetMovements) > 0 {
 				s.mu.Lock()
