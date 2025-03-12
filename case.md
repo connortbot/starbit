@@ -331,3 +331,12 @@ Let's make it so that a window glows green if it is selected.
 And, lets just always have the ports as 50051 and 50052. This makes it easier on the user!
 
 > I also had to add a pinging mechanism to keep the UDP connection alive. I had not implemented this before, and it cause stream timeouts.
+
+And so after all that, we finally have a working version of `starbit`, complete with:
+- game joining
+- quick keybind combat
+- pretty terminal ui
+- using both gRPC and UDP!
+
+![nice1](./screenshots/05.png)
+![nice2](./screenshots/06.png)
