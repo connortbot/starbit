@@ -12,27 +12,22 @@ sudo apt-get upgrade -y
 
 # Install required packages
 echo "Installing required packages..."
-sudo apt-get install -y protobuf-compiler git wget
+sudo apt-get install -y protobuf-compiler git wget snapd
 
-# Install Go 1.23
-echo "Installing Go 1.23..."
-wget https://go.dev/dl/go1.23.0.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.23.0.linux-amd64.tar.gz
-rm go1.23.0.linux-amd64.tar.gz
+# Install Go using snap
+echo "Installing Go using snap..."
+sudo snap install go --channel=1.23/stable
+echo 'export PATH=$PATH:/snap/bin' >> ~/.bashrc
+export PATH=$PATH:/snap/bin
 
-# Set up Go environment
-echo "Setting up Go environment..."
-export PATH=$PATH:/usr/local/go/bin:$(go env GOPATH)/bin
-echo 'export PATH=$PATH:/usr/local/go/bin:$(go env GOPATH)/bin' >> ~/.bashrc
-
+# Verify Go installation
 echo "Verifying Go installation..."
-/usr/local/go/bin/go version
+go version
 
 # Install Go protobuf plugins
 echo "Installing protobuf plugins..."
-/usr/local/go/bin/go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-/usr/local/go/bin/go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 # Generate protobuf files
 echo "Generating protobuf files..."

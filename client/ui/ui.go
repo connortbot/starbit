@@ -175,27 +175,44 @@ func RenderGameScreen(
 	return s.String()
 }
 
-func RenderJoinScreen(username string, logWindow *ScrollingViewport) string {
+func RenderJoinScreen(username string, logWindow *ScrollingViewport, ipAddress string, tcpPort string, udpPort string, connected bool) string {
 	var s strings.Builder
 
-	joinBox := strings.Builder{}
-	joinBox.WriteString(renderBoxTop(PlayerBoxWidth, "Join Game", TitleCenter) + "\n")
-	joinBox.WriteString(padLine("Enter Username:", PlayerBoxWidth, false) + "\n")
-	joinBox.WriteString(padLine("", PlayerBoxWidth, false) + "\n")
-	joinBox.WriteString(padLine("> "+username, PlayerBoxWidth, false) + "\n")
+	usernameBox := strings.Builder{}
+	usernameBox.WriteString(renderBoxTop(PlayerBoxWidth, "Username (N)", TitleLeft) + "\n")
+	usernameBox.WriteString(padLine("> "+username, PlayerBoxWidth, false) + "\n")
+	usernameBox.WriteString(renderBoxBottom(PlayerBoxWidth))
 
-	for i := 0; i < PlayerBoxHeight-5; i++ {
-		joinBox.WriteString(padLine("", PlayerBoxWidth, false) + "\n")
+	ipBox := strings.Builder{}
+	ipBox.WriteString(renderBoxTop(PlayerBoxWidth, "IP Address (I)", TitleLeft) + "\n")
+	ipBox.WriteString(padLine("> "+ipAddress, PlayerBoxWidth, false) + "\n")
+	ipBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+
+	tcpBox := strings.Builder{}
+	tcpBox.WriteString(renderBoxTop(PlayerBoxWidth, "TCP Port (T)", TitleLeft) + "\n")
+	tcpBox.WriteString(padLine("> "+tcpPort, PlayerBoxWidth, false) + "\n")
+	tcpBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+
+	udpBox := strings.Builder{}
+	udpBox.WriteString(renderBoxTop(PlayerBoxWidth, "UDP Port (U)", TitleLeft) + "\n")
+	udpBox.WriteString(padLine("> "+udpPort, PlayerBoxWidth, false) + "\n")
+	udpBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+
+	joinButton := strings.Builder{}
+	joinBoxTitle := "Connect to Starbit"
+	if connected {
+		joinBoxTitle = "Join Game"
 	}
+	joinButton.WriteString(renderBoxTop(PlayerBoxWidth, joinBoxTitle, TitleCenter) + "\n")
+	joinButton.WriteString(padLine("Press ENTER", PlayerBoxWidth, true) + "\n")
+	joinButton.WriteString(renderBoxBottom(PlayerBoxWidth))
 
-	joinBox.WriteString(renderMidline(PlayerBoxWidth))
-	joinBox.WriteString(padLine("Press ENTER to join", PlayerBoxWidth, false) + "\n")
-	joinBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+	inputSection := listBoxes(1, usernameBox.String(), ipBox.String(), tcpBox.String(), udpBox.String(), joinButton.String())
 
 	if logWindow != nil {
-		s.WriteString(sideBySideBoxes(2, joinBox.String(), logWindow.Render()))
+		s.WriteString(sideBySideBoxes(2, inputSection, logWindow.Render()))
 	} else {
-		s.WriteString(joinBox.String() + "\n")
+		s.WriteString(inputSection + "\n")
 	}
 
 	return s.String()

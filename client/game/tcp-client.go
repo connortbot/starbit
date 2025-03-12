@@ -3,6 +3,7 @@ package game
 import (
 	"context"
 	"log"
+	"fmt"
 
 	pb "starbit/proto"
 
@@ -19,6 +20,8 @@ type GameMsg struct {
 
 type Client struct {
 	username string
+	ip       string
+	tcpPort  string
 	conn     *grpc.ClientConn
 	client   pb.GameClient
 	Stream   pb.Game_MaintainConnectionClient
@@ -31,9 +34,17 @@ func NewClient() *Client {
 	}
 }
 
+func (c *Client) SetConnectionInfo(ip string, tcpPort string) {
+	c.ip = ip
+	c.tcpPort = tcpPort
+}
+
 func (c *Client) Connect() error {
+	if c.ip == "" || c.tcpPort == "" {
+		return fmt.Errorf("ip and tcpPort must be set")
+	}
 	// always use conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(c.ip+":"+c.tcpPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}

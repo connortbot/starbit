@@ -285,3 +285,36 @@ And on the client side,
 ## Unique Colours
 Currently, all the enemies are coloured red. Lets change that.
 ![aint this cool 4](./screenshots/03.png)
+
+## `starbit alpha v0.01`
+
+I was able to deploy this using some simple terraform to set up a Ubuntu VM with exposed 50051 and 50052 ports. We then update the client to run with those IPs and bam:
+
+> a very sad way to test
+![hehe](./screenshots/04.png)
+
+## Deploying
+Make a key-pair in Ohio (us-east-2). Download the pem and place it in `!/.ssh/starbit.pem`.
+
+```shell
+cd infrastructure
+terraform init
+terraform apply -var="key_name=starbit"
+
+# And later
+terraform destroy -var="key_name=starbit"
+```
+
+This will provide the server IP!
+
+Then:
+```shell
+ssh -i ~/.ssh/starbit.pem ubuntu@<IP>
+git clone https://github.com/connortbot/starbit.git
+
+# Once inside the server
+chmod +x setup_server.sh
+./setup_server.sh
+chmod +x run_server.sh
+./run_server.sh
+```

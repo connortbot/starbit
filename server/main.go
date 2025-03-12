@@ -44,7 +44,7 @@ func generateSelfSignedCert() tls.Certificate {
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
-		IPAddresses:           []net.IP{net.ParseIP("127.0.0.1")},
+		DNSNames:              []string{"*"},
 	}
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
@@ -68,20 +68,20 @@ func generateTLSConfig() *tls.Config {
 }
 
 func main() {
-	// TCP setup
-	lis, err := net.Listen("tcp", ":50051")
+	// TCP setup - bind to all interfaces
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	defer lis.Close()
 
-	// UDP setup
-	listener, err := quic.ListenAddr(":50052", generateTLSConfig(), nil)
+	// UDP setup - bind to all interfaces
+	listener, err := quic.ListenAddr("localhost:50052", generateTLSConfig(), nil)
 	if err != nil {
 		log.Fatal("QUIC listen error:", err)
 	}
 	defer listener.Close()
-	log.Println("QUIC server listening on :50052")
+	log.Println("QUIC server listening on localhost:50052")
 
 	// create shared game state
 	gameState := game.NewState()

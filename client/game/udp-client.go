@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"log"
+	"fmt"
 	"time"
 
 	pb "starbit/proto"
@@ -23,6 +24,8 @@ type UDPClient struct {
 	username string
 	tickCh   chan *pb.TickMsg
 	errorCh  chan ErrorMessage
+	ip       string
+	udpPort  string
 }
 
 type ServerMessage struct {
@@ -53,8 +56,12 @@ func (c *UDPClient) Connect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	if c.ip == "" || c.udpPort == "" {
+		return fmt.Errorf("ip and udpPort must be set")
+	}
+
 	// connect to the server
-	session, err := quic.DialAddr(ctx, "localhost:50052", &tls.Config{
+	session, err := quic.DialAddr(ctx, c.ip+":"+c.udpPort, &tls.Config{
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"starbit-quic"},
 	}, nil)
@@ -100,6 +107,11 @@ func (c *UDPClient) Register(username string) error {
 	}
 
 	return nil
+}
+
+func (c *UDPClient) SetConnectionInfo(ip string, udpPort string) {
+	c.ip = ip
+	c.udpPort = udpPort
 }
 
 func (c *UDPClient) GetTickChannel() <-chan *pb.TickMsg {

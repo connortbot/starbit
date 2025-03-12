@@ -24,8 +24,56 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.client.Close()
 			}
 			return m, tea.Quit
+		case "T", "shift+t":
+			m.inputMode = TCPPortMode
+		case "U", "shift+u":
+			m.inputMode = UDPPortMode
+		case "I", "shift+i":
+			m.inputMode = IPMode
+		case "N", "shift+n":
+			m.inputMode = UsernameMode
 		case "enter":
-			if m.username != "" && !m.started {
+			if !m.connected {
+				readyToConnect := m.ipAddress != "" && m.tcpPort != "" && m.udpPort != "" && !m.started
+				if !readyToConnect {
+					m.gameLogger.AddSystemMessage("Please enter a IP address, TCP port, and UDP port to connect to the server.")
+					ui.UpdateLogWindow(m.logWindow, m.gameLogger)
+					return m, nil
+				}
+				m.client.SetConnectionInfo(m.ipAddress, m.tcpPort)
+				m.udpClient.SetConnectionInfo(m.ipAddress, m.udpPort)
+
+				m.client.Connect()
+				if err := m.client.Connect(); err != nil {
+					debugLog.Printf("Error connecting TCP client: %v", err)
+					m.gameLogger.AddSystemMessage(fmt.Sprintf("Error connecting to TCP client [%v] Double check your IP and TCP port!", err))
+					ui.UpdateLogWindow(m.logWindow, m.gameLogger)
+					return m, nil
+				}
+				debugLog.Printf("TCP client connected successfully")
+
+				if err := m.udpClient.Connect(); err != nil {
+					debugLog.Printf("Error connecting UDP client: %v", err)
+					m.gameLogger.AddSystemMessage(fmt.Sprintf("Error connecting to UDP client [%v] Double check your IP and UDP port!", err))
+					ui.UpdateLogWindow(m.logWindow, m.gameLogger)
+					return m, nil
+				}
+				debugLog.Printf("UDP client connected successfully")
+
+				go listenForUDPTicks(m.udpClient, program)
+				go listenForUDPErrors(m.udpClient, program)
+				go listenForTCPUpdates(m.client, program)
+				debugLog.Printf("Listening for UDP ticks, errors, and TCP updates")
+
+				m.connected = true
+				return m, nil
+			} else {
+				debugLog.Printf("Joining Game")
+				readyToJoin := m.username != ""
+				if !readyToJoin {
+					m.gameLogger.AddSystemMessage("Please enter a username to join the game.")
+					return m, nil
+				}
 				if err := m.udpClient.Register(m.username); err != nil {
 					m.err = err
 					return m, nil
@@ -69,12 +117,34 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				return m, nil
 			}
 		case "backspace":
-			if len(m.username) > 0 && !m.started {
-				m.username = m.username[:len(m.username)-1]
+			if m.inputMode == UsernameMode {
+				if len(m.username) > 0 && !m.started {
+					m.username = m.username[:len(m.username)-1]
+				}
+			} else if m.inputMode == IPMode {
+				if len(m.ipAddress) > 0 && !m.started {
+					m.ipAddress = m.ipAddress[:len(m.ipAddress)-1]
+				}
+			} else if m.inputMode == TCPPortMode {
+				if len(m.tcpPort) > 0 && !m.started {
+					m.tcpPort = m.tcpPort[:len(m.tcpPort)-1]
+				}
+			} else if m.inputMode == UDPPortMode {
+				if len(m.udpPort) > 0 && !m.started {
+					m.udpPort = m.udpPort[:len(m.udpPort)-1]
+				}
 			}
 		default:
 			if len(msg.String()) == 1 && !m.started {
-				m.username += msg.String()
+				if m.inputMode == UsernameMode {
+					m.username += msg.String()
+				} else if m.inputMode == IPMode {
+					m.ipAddress += msg.String()
+				} else if m.inputMode == TCPPortMode {
+					m.tcpPort += msg.String()
+				} else if m.inputMode == UDPPortMode {
+					m.udpPort += msg.String()
+				}
 			}
 		}
 	case game.GameMsg:

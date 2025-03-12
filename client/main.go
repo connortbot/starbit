@@ -13,6 +13,7 @@ import (
 )
 
 var debugLog *log.Logger
+var program *tea.Program
 
 func init() {
 	if len(os.Getenv("DEBUG")) > 0 {
@@ -33,6 +34,15 @@ const (
 	CommandMode ControlMode = "Command"
 	InspectMode ControlMode = "Inspect"
 	ExploreMode ControlMode = "Explore"
+)
+
+type InputMode string
+
+const (
+	IPMode InputMode = "IP"
+	TCPPortMode InputMode = "TCP Port"
+	UDPPortMode InputMode = "UDP Port"
+	UsernameMode InputMode = "Username"
 )
 
 type model struct {
@@ -58,6 +68,11 @@ type model struct {
 	selectedY int32
 
 	controlMode ControlMode
+	inputMode   InputMode
+	ipAddress   string
+	tcpPort     string
+	udpPort     string
+	connected   bool
 
 	udpClient *game.UDPClient
 }
@@ -85,7 +100,7 @@ func (m model) View() string {
 	}
 
 	if !m.joined {
-		return ui.RenderJoinScreen(m.username, m.logWindow)
+		return ui.RenderJoinScreen(m.username, m.logWindow, m.ipAddress, m.tcpPort, m.udpPort, m.connected)
 	}
 
 	selectedSystemIndex := m.selectedY*m.galaxy.Width + m.selectedX
@@ -133,40 +148,23 @@ func listenForTCPUpdates(client *game.Client, p *tea.Program) {
 func main() {
 	debugLog.Println("Initializing UDP client...")
 	udpClient := game.NewUDPClient()
-	if err := udpClient.Connect(); err != nil {
-		fmt.Printf("Error connecting UDP client: %v\n", err)
-		debugLog.Printf("UDP connection failed: %v", err)
-		os.Exit(1)
-	}
-	debugLog.Println("UDP client connected successfully")
-
-	// initialize TCP client for game joining and initial galaxy state
 	debugLog.Println("initializing TCP client...")
 	client := game.NewClient()
-	if err := client.Connect(); err != nil {
-		fmt.Printf("Error connecting TCP client: %v\n", err)
-		os.Exit(1)
-	}
-	debugLog.Println("TCP client connected successfully")
 
 	gameLogger := ui.NewGameLogger(100) // store up to 100 log messages
 	gameLogger.AddSystemMessage("Welcome to Starbit! Enter your username to join.")
 	logWindow := ui.NewLogWindow(gameLogger, ui.LogBoxWidth, ui.LogBoxHeight)
 
-	p := tea.NewProgram(model{
+	program := tea.NewProgram(model{
+		connected:  false,
 		client:     client,
 		udpClient:  udpClient,
 		gameLogger: gameLogger,
 		logWindow:  logWindow,
 	}, tea.WithAltScreen())
 
-	// start listening for both UDP and TCP game updates
-	go listenForUDPTicks(udpClient, p)
-	go listenForUDPErrors(udpClient, p)
-	go listenForTCPUpdates(client, p)
-
 	// run the UI
-	if _, err := p.Run(); err != nil {
+	if _, err := program.Run(); err != nil {
 		fmt.Printf("Error running UI: %v\n", err)
 		os.Exit(1)
 	}

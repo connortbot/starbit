@@ -240,8 +240,6 @@ func (s *UDPServer) broadcastTicks() {
 
 			remainingBattlingSystems := []int32{}
 
-			log.Printf("Processing %d battling systems: %v", len(s.state.battlingSystems), s.state.battlingSystems)
-
 			systemCount := make(map[int32]int)
 			for _, id := range s.state.battlingSystems {
 				systemCount[id]++
