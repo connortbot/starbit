@@ -30,13 +30,7 @@ var (
 	boldStyle  = lipgloss.NewStyle().Bold(true)
 )
 
-func RenderCommandLine(command string, isActive bool) string {
-	var style *lipgloss.Style
-	if isActive {
-		s := greenStyle
-		style = &s
-	}
-
+func RenderCommandLine(command string, style *lipgloss.Style) string {
 	var s strings.Builder
 	s.WriteString(renderBoxTop(CommandLineWidth, "Command", TitleLeft, style) + "\n")
 	s.WriteString(padLine("> "+command, CommandLineWidth, true, style) + "\n")
@@ -54,13 +48,12 @@ func RenderGuideLabel(text string) string {
 }
 
 func RenderHelpFooter() string {
-	return sideBySideBoxes(
-		2,
-		RenderGuideLabel("Cmd: Shift+C"),
-		RenderGuideLabel("Inspect: Shift+I"),
-		RenderGuideLabel("Explore: Shift+E"),
-		RenderGuideLabel("Quit: Ctrl+C"),
-	)
+	cmdGuide := RenderGuideLabel("Cmd: Shift+C")
+	inspectGuide := RenderGuideLabel("Inspect: Shift+I")
+	exploreGuide := RenderGuideLabel("Explore: Shift+E")
+	quitGuide := RenderGuideLabel("Quit: Ctrl+C")
+
+	return sideBySideBoxes(2, cmdGuide, inspectGuide, exploreGuide, quitGuide)
 }
 
 func GenerateInspectContent(width int, system *pb.System) string {
@@ -102,8 +95,8 @@ func NewInspectWindow(width int, system *pb.System) *ScrollingViewport {
 	)
 }
 
-func RenderInspectWindow(inspector *ScrollingViewport) string {
-	return inspector.Render()
+func RenderInspectWindow(inspector *ScrollingViewport, style *lipgloss.Style) string {
+	return inspector.Render(style)
 }
 
 func RenderPlayerBox(started bool, username string, players map[string]*pb.Player) string {
@@ -160,41 +153,34 @@ func RenderGameScreen(
 	var s strings.Builder
 
 	playerBox := RenderPlayerBox(started, username, players)
-
 	if logWindow != nil {
-		s.WriteString(sideBySideBoxes(2, playerBox, logWindow.Render()))
+		s.WriteString(sideBySideBoxes(2, playerBox, logWindow.Render(nil)))
 	} else {
 		s.WriteString(playerBox + "\n")
 	}
 
 	if started && galaxy != nil {
-		var galaxyStyle, inspectorStyle *lipgloss.Style
-
-		if controlMode == "Explore" {
-			s := greenStyle
-			galaxyStyle = &s
-		} else if controlMode == "Inspect" {
-			s := greenStyle
-			inspectorStyle = &s
-		}
-
 		galaxyContent := RenderGalaxy(galaxy, username, selectedX, selectedY)
-		boxedGalaxyContent := wrapInBox(galaxyContent, GalaxyBoxWidth, 0, "Galaxy", TitleCenter, galaxyStyle)
-
-		if inspectorStyle != nil {
-			inspector.SetStyle(inspectorStyle)
-		} else {
-			inspector.SetStyle(nil)
+		var boxedGalaxyStyle *lipgloss.Style
+		var boxedCommandStyle *lipgloss.Style
+		var boxedInspectorStyle *lipgloss.Style
+		if controlMode == "Explore" {
+			boxedGalaxyStyle = &greenStyle
+		} else if controlMode == "Inspect" {
+			boxedInspectorStyle = &greenStyle
+		} else if controlMode == "Command" {
+			boxedCommandStyle = &greenStyle
 		}
 
+		boxedGalaxyContent := wrapInBox(galaxyContent, GalaxyBoxWidth, 0, "Galaxy", TitleCenter, boxedGalaxyStyle)
 		inspector.UpdateContent(GenerateInspectContent(InspectorWidth, selectedSystem))
-		inspectWindow := RenderInspectWindow(inspector)
-		s.WriteString(sideBySideBoxes(2, boxedGalaxyContent, inspectWindow))
+		inspectWindow := inspector.Render(boxedInspectorStyle)
 
-		isCommandActive := controlMode == "Command"
-		s.WriteString(RenderCommandLine(command, isCommandActive))
-
-		s.WriteString(RenderHelpFooter())
+		topContent := sideBySideBoxes(2, boxedGalaxyContent, inspectWindow)
+		s.WriteString(listBoxes(1,
+			topContent,
+			RenderCommandLine(command, boxedCommandStyle),
+			RenderHelpFooter()))
 		s.WriteString("\n")
 		s.WriteString(fmt.Sprintf("   Mode: %s    GES: %d", controlMode, gesAmount))
 	}
@@ -204,34 +190,32 @@ func RenderGameScreen(
 func RenderJoinScreen(username string, logWindow *ScrollingViewport, ipAddress string, connected bool, inputMode string) string {
 	var s strings.Builder
 
-	var usernameStyle, ipStyle *lipgloss.Style
+	var usernameBoxStyle *lipgloss.Style
+	var ipBoxStyle *lipgloss.Style
 
 	if inputMode == "Username" {
-		style := greenStyle
-		usernameStyle = &style
+		usernameBoxStyle = &greenStyle
+	} else if inputMode == "IP" {
+		ipBoxStyle = &greenStyle
 	}
 
-	if inputMode == "IP" {
-		style := greenStyle
-		ipStyle = &style
-	}
-
+	usernameContent := "> " + username
 	usernameBox := wrapInBox(
-		"> "+username,
+		usernameContent,
 		PlayerBoxWidth,
 		0,
-		"Username (N)",
+		"Username (Shift+N)",
 		TitleLeft,
-		usernameStyle,
+		usernameBoxStyle,
 	)
 
 	ipBox := wrapInBox(
 		"> "+ipAddress,
 		PlayerBoxWidth,
 		0,
-		"IP Address (I)",
+		"IP Address (Shift+I)",
 		TitleLeft,
-		ipStyle,
+		ipBoxStyle,
 	)
 
 	joinBoxTitle := "Connect to Starbit"
@@ -251,7 +235,7 @@ func RenderJoinScreen(username string, logWindow *ScrollingViewport, ipAddress s
 	inputSection := listBoxes(1, usernameBox, ipBox, joinButton)
 
 	if logWindow != nil {
-		s.WriteString(sideBySideBoxes(2, inputSection, logWindow.Render()))
+		s.WriteString(sideBySideBoxes(2, inputSection, logWindow.Render(nil)))
 	} else {
 		s.WriteString(inputSection + "\n")
 	}

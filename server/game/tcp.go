@@ -62,6 +62,7 @@ func (s *Server) JoinGame(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRes
 
 	// if game just started, notify all connected clients with galaxy data
 	if gameJustStarted {
+		log.Printf("Game just started, broadcasting to %d clients", len(s.clients))
 		s.broadcastGameStart()
 	}
 

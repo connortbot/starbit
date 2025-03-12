@@ -14,7 +14,7 @@ const (
 )
 
 func renderBoxBottom(width int, style *lipgloss.Style) string {
-	bottom := "╰" + strings.Repeat("─", width-2) + "╯\n\n"
+	bottom := "╰" + strings.Repeat("─", width-2) + "╯\n"
 	if style != nil {
 		return style.Render(bottom)
 	}
@@ -72,6 +72,15 @@ func padLine(content string, width int, follow bool, style *lipgloss.Style) stri
 	padding := width - contentWidth - 3 // -3 for "│ " and "│"
 
 	var line string
+	var leftBorder, rightBorder string
+
+	if style != nil {
+		leftBorder = style.Render("│") + " "
+		rightBorder = style.Render("│")
+	} else {
+		leftBorder = "│ "
+		rightBorder = "│"
+	}
 
 	if padding < 0 {
 		if follow {
@@ -85,7 +94,7 @@ func padLine(content string, width int, follow bool, style *lipgloss.Style) stri
 					break
 				}
 			}
-			line = fmt.Sprintf("│ %s│", visibleContent)
+			line = leftBorder + visibleContent + rightBorder
 		} else {
 			// truncate the content
 			truncated := content
@@ -96,28 +105,10 @@ func padLine(content string, width int, follow bool, style *lipgloss.Style) stri
 					break
 				}
 			}
-			line = fmt.Sprintf("│ %s│", truncated)
+			line = leftBorder + truncated + rightBorder
 		}
 	} else {
-		line = fmt.Sprintf("│ %s%s│", content, strings.Repeat(" ", padding))
-	}
-
-	if style != nil {
-		// we only want to style the border chars, not the content
-		parts := strings.SplitN(line, " ", 2)
-		if len(parts) == 2 {
-			// style just the first border char
-			styled := style.Render(parts[0])
-			// get the content and padding
-			contentParts := strings.SplitN(parts[1], "│", 2)
-			if len(contentParts) == 2 {
-				// style just the last border char
-				styledEnd := style.Render("│")
-				line = styled + " " + contentParts[0] + styledEnd
-			} else {
-				line = styled + " " + parts[1]
-			}
-		}
+		line = leftBorder + content + strings.Repeat(" ", padding) + rightBorder
 	}
 
 	return line
@@ -164,11 +155,8 @@ func wrapInBox(content string, width int, height int, title string, titleAlign T
 		titleAlign,
 	)
 
-	if style != nil {
-		viewport.SetStyle(style)
-	}
-
-	return viewport.Render()
+	rendered := viewport.Render(style)
+	return rendered
 }
 
 // sideBySide takes two pieces of content and places them side by side with optional padding between
@@ -200,9 +188,9 @@ func sideBySide(left, right string, padding int) string {
 	paddingStr := strings.Repeat(" ", padding)
 
 	for i := 0; i < maxLines; i++ {
-		// ensure the left stuff is padded to a consistent width
-		lineWidth := lipgloss.Width(leftLines[i])
-		extraPadding := leftWidth - lineWidth
+		// get the visible width of this line, accounting for any styling
+		thisLineWidth := lipgloss.Width(leftLines[i])
+		extraPadding := leftWidth - thisLineWidth
 
 		s.WriteString(leftLines[i])
 		if extraPadding > 0 {
