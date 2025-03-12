@@ -76,12 +76,12 @@ func main() {
 	defer lis.Close()
 
 	// UDP setup - bind to all interfaces
-	listener, err := quic.ListenAddr("localhost:50052", generateTLSConfig(), nil)
+	listener, err := quic.ListenAddr("0.0.0.0:50052", generateTLSConfig(), nil)
 	if err != nil {
 		log.Fatal("QUIC listen error:", err)
 	}
 	defer listener.Close()
-	log.Println("QUIC server listening on localhost:50052")
+	log.Println("QUIC server listening on 0.0.0.0:50052")
 
 	// create shared game state
 	gameState := game.NewState()

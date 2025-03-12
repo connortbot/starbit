@@ -311,10 +311,12 @@ Then:
 ```shell
 ssh -i ~/.ssh/starbit.pem ubuntu@<IP>
 git clone https://github.com/connortbot/starbit.git
+cd starbit
 
 # Once inside the server
 chmod +x setup_server.sh
 ./setup_server.sh
+source ~/.bashrc
 chmod +x run_server.sh
 ./run_server.sh
 ```

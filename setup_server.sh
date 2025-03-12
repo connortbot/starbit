@@ -5,46 +5,37 @@ set -e
 
 echo "Setting up Starbit server environment..."
 
-# Update system packages
-echo "Updating system packages..."
-sudo apt-get update
-sudo apt-get upgrade -y
-
-# Install required packages
-echo "Installing required packages..."
+# Update and install packages
+sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y protobuf-compiler git wget snapd
 
-# Install Go using snap with --classic flag
-echo "Installing Go using snap..."
+# Install Go and set up environment
 sudo snap install go --classic --channel=1.23/stable
 
-# Set up Go environment
-echo "Setting up Go environment..."
-export PATH=$PATH:/snap/bin:$(go env GOPATH)/bin
-echo 'export PATH=$PATH:/snap/bin:$(go env GOPATH)/bin' >> ~/.bashrc
-source ~/.bashrc
+# Set up Go environment in .profile (this gets sourced by .bashrc)
+echo 'export GOPATH=$HOME/go
+export GOBIN=$GOPATH/bin
+export PATH=$PATH:/snap/bin:$GOBIN' >> ~/.profile
 
-# Verify Go installation
-echo "Verifying Go installation..."
+# Create Go workspace and set up current session
+mkdir -p $HOME/go/bin
+source ~/.profile
+
+# Verify installation
 go version
 
-# Install Go protobuf plugins
-echo "Installing protobuf plugins..."
+# Install and verify protobuf plugins
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+which protoc-gen-go
 
-# Generate protobuf files
-echo "Generating protobuf files..."
+# Generate protobuf files and make server executable
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/service.proto
-
-# Make run_server.sh executable
-echo "Making run_server.sh executable..."
 chmod +x run_server.sh
 
-# Increase UDP buffer size for better QUIC performance and make it permanent
-echo "Increasing UDP buffer size..."
-echo "net.core.rmem_max=2500000" | sudo tee -a /etc/sysctl.conf
-echo "net.core.wmem_max=2500000" | sudo tee -a /etc/sysctl.conf
+# Configure UDP buffer size for QUIC
+echo "net.core.rmem_max=2500000
+net.core.wmem_max=2500000" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 
 echo "Setup complete! You can now run ./run_server.sh"
