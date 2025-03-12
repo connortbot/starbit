@@ -14,7 +14,7 @@ const (
 )
 
 func renderBoxBottom(width int, style *lipgloss.Style) string {
-	bottom := "╰" + strings.Repeat("─", width-2) + "╯\n"
+	bottom := "╰" + strings.Repeat("─", width-2) + "╯"
 	if style != nil {
 		return style.Render(bottom)
 	}

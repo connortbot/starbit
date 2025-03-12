@@ -158,6 +158,8 @@ func main() {
 		gameLogger: gameLogger,
 		logWindow:  logWindow,
 		inputMode:  UsernameMode,
+
+		ipAddress: "3.133.113.171",
 	}, tea.WithAltScreen())
 
 	// run the UI

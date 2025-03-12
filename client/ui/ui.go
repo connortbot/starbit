@@ -20,7 +20,7 @@ const (
 	CommandLineWidth = InspectorWidth + GalaxyBoxWidth + 2
 	PlayerBoxWidth   = 30
 	PlayerBoxHeight  = 15
-	LogBoxWidth      = 60
+	LogBoxWidth      = 70
 	LogBoxHeight     = 15
 )
 
@@ -153,10 +153,11 @@ func RenderGameScreen(
 	var s strings.Builder
 
 	playerBox := RenderPlayerBox(started, username, players)
+	var infoSection string
 	if logWindow != nil {
-		s.WriteString(sideBySideBoxes(2, playerBox, logWindow.Render(nil)))
+		infoSection = sideBySideBoxes(1, playerBox, logWindow.Render(nil))
 	} else {
-		s.WriteString(playerBox + "\n")
+		infoSection = playerBox + "\n"
 	}
 
 	if started && galaxy != nil {
@@ -176,13 +177,17 @@ func RenderGameScreen(
 		inspector.UpdateContent(GenerateInspectContent(InspectorWidth, selectedSystem))
 		inspectWindow := inspector.Render(boxedInspectorStyle)
 
-		topContent := sideBySideBoxes(2, boxedGalaxyContent, inspectWindow)
-		s.WriteString(listBoxes(1,
-			topContent,
-			RenderCommandLine(command, boxedCommandStyle),
-			RenderHelpFooter()))
-		s.WriteString("\n")
-		s.WriteString(fmt.Sprintf("   Mode: %s    GES: %d", controlMode, gesAmount))
+		gameplayViewportContent := sideBySideBoxes(1, boxedGalaxyContent, inspectWindow)
+		gameContent := listBoxes(0,
+			gameplayViewportContent,
+			RenderCommandLine(command, boxedCommandStyle) + "\n",
+			RenderHelpFooter()) + "\n"
+		s.WriteString(listBoxes(0,
+			infoSection,
+			gameContent,
+			fmt.Sprintf("   Mode: %s    GES: %d", controlMode, gesAmount)))
+	} else {
+		s.WriteString(infoSection)
 	}
 	return s.String()
 }
