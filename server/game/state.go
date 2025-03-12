@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	galaxyWidth  = 10
-	galaxyHeight = 10
+	galaxyWidth  = 5
+	galaxyHeight = 5
 	maxPlayers   = 2
 )
 
@@ -29,9 +29,9 @@ func NewState() *State {
 	for y := 0; y < galaxyHeight; y++ {
 		for x := 0; x < galaxyWidth; x++ {
 			systems = append(systems, &pb.System{
-				Id:  int32(id),
-				X:   int32(x),
-				Y:   int32(y),
+				Id:    int32(id),
+				X:     int32(x),
+				Y:     int32(y),
 				Owner: "none",
 			})
 			id += 1

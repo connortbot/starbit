@@ -125,7 +125,7 @@ func RenderGameScreen(
 
 	if started && galaxy != nil {
 		galaxyContent := RenderGalaxy(galaxy, username, selectedX, selectedY)
-		boxedGalaxyContent := wrapInBox(galaxyContent, 23, "Galaxy", TitleCenter)
+		boxedGalaxyContent := wrapInBox(galaxyContent, 45, "Galaxy", TitleCenter)
 		inspector.UpdateContent(GenerateInspectContent(60, selectedSystem))
 		inspectWindow := RenderInspectWindow(inspector)
 		s.WriteString(sideBySideBoxes(2, boxedGalaxyContent, inspectWindow))

@@ -5,6 +5,8 @@ import (
 
 	"starbit/client/ui"
 
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -19,17 +21,28 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 			return m, tea.Quit
 		case "enter":
 			if m.username != "" && !m.started {
-				if err := m.client.SubscribeToTicks(m.username); err != nil {
+				if err := m.udpClient.Register(m.username); err != nil {
+					m.err = err
+					return m, nil
+				}
+
+				if err := m.client.MaintainConnection(m.username); err != nil {
 					m.client.Close()
 					m.err = err
 					return m, nil
 				}
+
+				// short delay to ensure connection is established
+				time.Sleep(100 * time.Millisecond)
+
+				// then join the game to get the initial state
 				resp, err := m.client.JoinGame(m.username)
 				if err != nil {
 					m.client.Close()
 					m.err = err
 					return m, nil
 				}
+
 				m.joined = true
 				m.playerCount = resp.PlayerCount
 				m.players = resp.Players
@@ -37,6 +50,11 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.galaxy = resp.Galaxy
 				m.inspector = ui.NewInspectWindow(60, m.galaxy.Systems[0])
 				m.controlMode = CommandMode
+
+				// log
+				debugLog.Printf("Joined game successfully. Started: %v, Players: %d",
+					m.started, m.playerCount)
+
 				return m, nil
 			}
 		case "backspace":

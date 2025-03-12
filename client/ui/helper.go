@@ -118,7 +118,7 @@ func wrapInBox(content string, width int, title string, titleAlign TitleAlignmen
 	// calculate content height by counting newlines
 	lines := strings.Split(strings.TrimRight(content, "\n"), "\n")
 	height := len(lines)
-	
+
 	// create viewport with full height to show all content
 	viewport := NewScrollingViewport(
 		content,
@@ -140,8 +140,16 @@ func sideBySide(left, right string, padding int) string {
 		maxLines = len(rightLines)
 	}
 
+	leftWidth := 0
+	for _, line := range leftLines {
+		lineWidth := lipgloss.Width(line)
+		if lineWidth > leftWidth {
+			leftWidth = lineWidth
+		}
+	}
+
 	for len(leftLines) < maxLines {
-		leftLines = append(leftLines, "")
+		leftLines = append(leftLines, strings.Repeat(" ", leftWidth))
 	}
 	for len(rightLines) < maxLines {
 		rightLines = append(rightLines, "")
@@ -151,7 +159,14 @@ func sideBySide(left, right string, padding int) string {
 	paddingStr := strings.Repeat(" ", padding)
 
 	for i := 0; i < maxLines; i++ {
+		// ensure the left stuff is padded to a consistent width
+		lineWidth := lipgloss.Width(leftLines[i])
+		extraPadding := leftWidth - lineWidth
+
 		s.WriteString(leftLines[i])
+		if extraPadding > 0 {
+			s.WriteString(strings.Repeat(" ", extraPadding))
+		}
 		s.WriteString(paddingStr)
 		s.WriteString(rightLines[i])
 		s.WriteString("\n")

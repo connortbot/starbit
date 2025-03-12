@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Game_JoinGame_FullMethodName         = "/proto.Game/JoinGame"
-	Game_SubscribeToTicks_FullMethodName = "/proto.Game/SubscribeToTicks"
+	Game_JoinGame_FullMethodName           = "/proto.Game/JoinGame"
+	Game_MaintainConnection_FullMethodName = "/proto.Game/MaintainConnection"
 )
 
 // GameClient is the client API for Game service.
@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GameClient interface {
 	JoinGame(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
-	SubscribeToTicks(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TickUpdate], error)
+	MaintainConnection(ctx context.Context, in *ConnectionRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GameUpdate], error)
 }
 
 type gameClient struct {
@@ -49,13 +49,13 @@ func (c *gameClient) JoinGame(ctx context.Context, in *JoinRequest, opts ...grpc
 	return out, nil
 }
 
-func (c *gameClient) SubscribeToTicks(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TickUpdate], error) {
+func (c *gameClient) MaintainConnection(ctx context.Context, in *ConnectionRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GameUpdate], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &Game_ServiceDesc.Streams[0], Game_SubscribeToTicks_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Game_ServiceDesc.Streams[0], Game_MaintainConnection_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[SubscribeRequest, TickUpdate]{ClientStream: stream}
+	x := &grpc.GenericClientStream[ConnectionRequest, GameUpdate]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -66,14 +66,14 @@ func (c *gameClient) SubscribeToTicks(ctx context.Context, in *SubscribeRequest,
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Game_SubscribeToTicksClient = grpc.ServerStreamingClient[TickUpdate]
+type Game_MaintainConnectionClient = grpc.ServerStreamingClient[GameUpdate]
 
 // GameServer is the server API for Game service.
 // All implementations must embed UnimplementedGameServer
 // for forward compatibility.
 type GameServer interface {
 	JoinGame(context.Context, *JoinRequest) (*JoinResponse, error)
-	SubscribeToTicks(*SubscribeRequest, grpc.ServerStreamingServer[TickUpdate]) error
+	MaintainConnection(*ConnectionRequest, grpc.ServerStreamingServer[GameUpdate]) error
 	mustEmbedUnimplementedGameServer()
 }
 
@@ -87,8 +87,8 @@ type UnimplementedGameServer struct{}
 func (UnimplementedGameServer) JoinGame(context.Context, *JoinRequest) (*JoinResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinGame not implemented")
 }
-func (UnimplementedGameServer) SubscribeToTicks(*SubscribeRequest, grpc.ServerStreamingServer[TickUpdate]) error {
-	return status.Errorf(codes.Unimplemented, "method SubscribeToTicks not implemented")
+func (UnimplementedGameServer) MaintainConnection(*ConnectionRequest, grpc.ServerStreamingServer[GameUpdate]) error {
+	return status.Errorf(codes.Unimplemented, "method MaintainConnection not implemented")
 }
 func (UnimplementedGameServer) mustEmbedUnimplementedGameServer() {}
 func (UnimplementedGameServer) testEmbeddedByValue()              {}
@@ -129,16 +129,16 @@ func _Game_JoinGame_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Game_SubscribeToTicks_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(SubscribeRequest)
+func _Game_MaintainConnection_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ConnectionRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(GameServer).SubscribeToTicks(m, &grpc.GenericServerStream[SubscribeRequest, TickUpdate]{ServerStream: stream})
+	return srv.(GameServer).MaintainConnection(m, &grpc.GenericServerStream[ConnectionRequest, GameUpdate]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Game_SubscribeToTicksServer = grpc.ServerStreamingServer[TickUpdate]
+type Game_MaintainConnectionServer = grpc.ServerStreamingServer[GameUpdate]
 
 // Game_ServiceDesc is the grpc.ServiceDesc for Game service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -154,8 +154,8 @@ var Game_ServiceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "SubscribeToTicks",
-			Handler:       _Game_SubscribeToTicks_Handler,
+			StreamName:    "MaintainConnection",
+			Handler:       _Game_MaintainConnection_Handler,
 			ServerStreams: true,
 		},
 	},

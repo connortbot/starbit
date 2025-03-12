@@ -175,4 +175,54 @@ After basically creating a mini UI library from scratch to make the boxes and so
 ## UDP vs TCP
 A big consideration of this is - if this is a RTS, why are we not using something like QUIC? UDP is infinitely better suited to use cases where real time communication is important.
 
-It adds a great deal of complexity but, maybe we can use gRPC for communication that is not low latency-dependent? Then, we can greatly increase the "real-time" effect of the game. 
+It adds a great deal of complexity but, maybe we can use gRPC for communication that is not low latency-dependent? Then, we can greatly increase the "real-time" effect of the game. The ticking would still remain, so for now we'll keep it at 5 seconds to keep it simple and minimize the effect of packet loss.
+
+### Implementation
+After some refactoring, I modified it so that TCP now is an open channel for general, admin changes (such as joining a game), whereas UDP is for rapid, game state changes.
+
+#### TCP Client
+We divide into `tcp-client.go` and `main.go`.
+- `Connect()` creates a new gRPC connection to port 50051.
+- `MaintainConnection()` opens a *stream* to receive updates from the server.
+- `receiveUpdates()` continually receive messages from the server. 
+The TCP client has a `tickCh` channel. `receiveUpdates()` sends it into here...
+- `listenForTCPUpdates` continually receives from that channel. 
+
+**Of course, we can combine `listenForTCPUpdates` and `receiveUpdates()`, which would remove the need for a `tickCh` in between. The only reason I decided against this is I think it makes more sense for `tcp-client.go` to be isolated from the BubbleTea framework. The same goes for UDP.
+```
+TCP Server → client.receiveUpdates() → tickCh channel → listenForTCPUpdates() → UI
+  (network)        (in client)        (intermediate)      (in main app)        (UI)
+```
+
+#### TCP Server
+- `MaintainConnection()` is called byt the client. We store streams as `map[string]<stream>`, keyed by username.
+- `broadcastGameStart()` called immediately when we hit max players, notifies everyone of the initial Galaxy state.
+
+#### UDP Client
+Similarly `udp-client.go` and `main.go`.
+- `Connect()` connects to QUIC server AND opens a stream AND begins listening for messages via `handleStream()`
+- `Register()` this is called to send a `register` message to the server. I call it when the client joins the game. It notifies the server of `username`.
+- `handleStream()` read data from stream, turn it into a TickMsg to send to the `tickCh`
+- `listenForUDPTicks()` sends to BubbleTea from `tickCh`
+
+Therefore, similarly, UDP:
+```
+UDP Server → client.handleStream() → tickCh channel → listenForUDPTicks() → UI
+  (network)       (in client)        (intermediate)     (in main app)       (UI)
+```
+Another note is that UDP seems to rely on marshalling and unmarshalling JSON. This is a lot easier and more flexible (given that I can enforce type safety on both sides, we love Go!).
+
+#### UDP Server
+- `Start()` start broadcasting ticks, and accepts connections.
+- `broadcastTicks()` sends out ticks to all client streams.
+
+We also call direct gRPC functions like `JoinGame`.
+I have a sneaking feeling this is all a bit disorganized...
+
+## Better Galaxy Map
+Boy, the Galaxy looks like it needs a polish, doesn't it?
+Also, let's make it 5x5 as thats not only easier but makes the games less daunting.
+We can also comfortably add a win condition that all systems need to be conquered to win.
+
+> I should just images, huh?
+![aint it cool](./screenshots/00.png)

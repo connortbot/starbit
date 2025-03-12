@@ -53,6 +53,8 @@ type model struct {
 	selectedY int32
 
 	controlMode ControlMode
+
+	udpClient *game.UDPClient
 }
 
 func (m model) Init() tea.Cmd {
@@ -60,11 +62,16 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var result model
+	var cmd tea.Cmd
+
 	if !m.started {
-		return m.HandleMenu(msg)
+		result, cmd = m.HandleMenu(msg)
 	} else {
-		return m.HandleGame(msg)
+		result, cmd = m.HandleGame(msg)
 	}
+
+	return result, cmd
 }
 
 func (m model) View() string {
@@ -89,39 +96,56 @@ func (m model) View() string {
 	)
 }
 
-func listenForTicks(client *game.Client, p *tea.Program) {
-	for {
-		if client.Stream == nil {
-			continue
-		}
-		tick, err := client.Stream.Recv()
-		if err != nil {
-			debugLog.Printf("Error receiving tick: %v", err)
-			return
-		}
-		tickMsg := game.TickMsg{
-			PlayerCount: tick.PlayerCount,
-			Players:     tick.Players,
-			Started:     tick.Started,
-			Galaxy:      tick.Galaxy,
-		}
-		debugLog.Printf("Tick: %v", tickMsg)
-		p.Send(tickMsg)
+// receives game state updates from the UDP server
+func listenForUDPTicks(udpClient *game.UDPClient, p *tea.Program) {
+	tickCh := udpClient.GetTickChannel()
+	for tick := range tickCh {
+		debugLog.Printf("UDP Tick: %v", tick)
+		p.Send(tick)
+	}
+}
+
+// receives game state updates from the TCP server
+func listenForTCPUpdates(client *game.Client, p *tea.Program) {
+	updateCh := client.GetUpdateChannel()
+	for update := range updateCh {
+		debugLog.Printf("TCP Update: players=%d, started=%v, hasGalaxy=%v",
+			len(update.Players), update.Started, update.Galaxy != nil)
+		p.Send(update)
 	}
 }
 
 func main() {
-	client := game.NewClient()
-	if err := client.Connect(); err != nil {
-		fmt.Printf("Error: %v", err)
+	debugLog.Println("Initializing UDP client...")
+	udpClient := game.NewUDPClient()
+	if err := udpClient.Connect(); err != nil {
+		fmt.Printf("Error connecting UDP client: %v\n", err)
+		debugLog.Printf("UDP connection failed: %v", err)
 		os.Exit(1)
 	}
+	debugLog.Println("UDP client connected successfully")
+
+	// initialize TCP client for game joining and initial galaxy state
+	debugLog.Println("initializing TCP client...")
+	client := game.NewClient()
+	if err := client.Connect(); err != nil {
+		fmt.Printf("Error connecting TCP client: %v\n", err)
+		os.Exit(1)
+	}
+	debugLog.Println("TCP client connected successfully")
+
 	p := tea.NewProgram(model{
-		client: client,
+		client:    client,
+		udpClient: udpClient,
 	}, tea.WithAltScreen())
-	go listenForTicks(client, p)
+
+	// start listening for both UDP and TCP game updates
+	go listenForUDPTicks(udpClient, p)
+	go listenForTCPUpdates(client, p)
+
+	// run the UI
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error: %v", err)
+		fmt.Printf("Error running UI: %v\n", err)
 		os.Exit(1)
 	}
 }

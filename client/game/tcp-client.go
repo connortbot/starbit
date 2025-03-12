@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"log"
 
 	pb "starbit/proto"
 
@@ -20,11 +21,14 @@ type Client struct {
 	username string
 	conn     *grpc.ClientConn
 	client   pb.GameClient
-	Stream   pb.Game_SubscribeToTicksClient
+	Stream   pb.Game_MaintainConnectionClient
+	tickCh   chan TickMsg // channel for game updates from TCP
 }
 
 func NewClient() *Client {
-	return &Client{}
+	return &Client{
+		tickCh: make(chan TickMsg, 10),
+	}
 }
 
 func (c *Client) Connect() error {
@@ -50,16 +54,46 @@ func (c *Client) JoinGame(name string) (*pb.JoinResponse, error) {
 	return resp, nil
 }
 
-func (c *Client) SubscribeToTicks(name string) error {
+func (c *Client) MaintainConnection(name string) error {
 	c.username = name
-	stream, err := c.client.SubscribeToTicks(context.Background(), &pb.SubscribeRequest{
+	stream, err := c.client.MaintainConnection(context.Background(), &pb.ConnectionRequest{
 		Username: name,
 	})
 	if err != nil {
 		return err
 	}
+
 	c.Stream = stream
+
+	// goroutine to receive messages from the server
+	go c.receiveUpdates()
+
 	return nil
+}
+
+// receives messages from the TCP server and forwards them to the tickCh
+func (c *Client) receiveUpdates() {
+	for {
+		update, err := c.Stream.Recv()
+		if err != nil {
+			log.Printf("Error receiving from TCP stream: %v", err)
+			return
+		}
+
+		log.Printf("Received TCP update: started=%v, galaxy=%v", update.Started, update.Galaxy != nil)
+
+		// convert to TickMsg and send to channel
+		c.tickCh <- TickMsg{
+			PlayerCount: update.PlayerCount,
+			Players:     update.Players,
+			Started:     update.Started,
+			Galaxy:      update.Galaxy,
+		}
+	}
+}
+
+func (c *Client) GetUpdateChannel() <-chan TickMsg {
+	return c.tickCh
 }
 
 func (c *Client) Close() {

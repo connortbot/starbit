@@ -5,7 +5,7 @@ option go_package = "starbit/proto";
 
 service Game {
   rpc JoinGame (JoinRequest) returns (JoinResponse) {}
-  rpc SubscribeToTicks (SubscribeRequest) returns (stream TickUpdate) {}
+  rpc MaintainConnection (ConnectionRequest) returns (stream GameUpdate) {}
 }
 
 message Empty {}
@@ -21,7 +21,7 @@ message JoinResponse {
   GalaxyState galaxy = 4;
 }
 
-message SubscribeRequest {
+message ConnectionRequest {
   string username = 1;
 }
 
@@ -49,7 +49,7 @@ message GameState {
   bool started = 3;
 }
 
-message TickUpdate {
+message GameUpdate {
   int32 playerCount = 1;
   map<string, Player> players = 2;
   bool started = 3;
