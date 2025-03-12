@@ -220,6 +220,23 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 			}
 		}
 
+		if len(msg.GesUpdates) > 0 {
+			for _, update := range msg.GesUpdates {
+				if update.Owner == m.username {
+					debugLog.Printf("Received GES update: %d", update.Amount)
+					m.gesAmount = update.Amount
+				}
+			}
+		}
+
+		if len(msg.FleetCreations) > 0 {
+			for _, creation := range msg.FleetCreations {
+				err := game.ProcessFleetCreation(m.galaxy, creation)
+				if err != nil {
+					debugLog.Printf("Error processing fleet creation: %v", err)
+				}
+			}
+		}
 		return m, nil
 	case game.ErrorMessage:
 		debugLog.Printf("Error from server: %s", msg.Content)

@@ -148,6 +148,31 @@ func (c *UDPClient) handleStream(stream quic.Stream) {
 	}
 }
 
+func (c *UDPClient) SendFleetCreation(fleetCreation *pb.FleetCreation) error {
+	tickMsg := &pb.TickMsg{
+		Message:        "fleet_creation",
+		FleetCreations: []*pb.FleetCreation{fleetCreation},
+	}
+
+	msg := ServerMessage{
+		Type:     "fleet_creation",
+		Username: c.username,
+		TickMsg:  tickMsg,
+	}
+
+	jsonMsg, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.stream.Write(jsonMsg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *UDPClient) SendFleetMovement(fleetMovement *pb.FleetMovement) error {
 	tickMsg := &pb.TickMsg{
 		Message:        "fleet_movement",

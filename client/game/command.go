@@ -29,11 +29,48 @@ func ParseCommand(client *UDPClient, input string) CommandResult {
 	switch cmdType {
 	case "fm":
 		return handleFleetMovement(client, parts)
+	case "fc":
+		return handleFleetCreation(client, parts)
 	default:
 		return CommandResult{
 			Success: false,
 			Message: fmt.Sprintf("Unknown command: %s", cmdType),
 		}
+	}
+}
+
+func handleFleetCreation(client *UDPClient, parts []string) CommandResult {
+	if len(parts) != 2 {
+		return CommandResult{
+			Success: false,
+			Message: "Invalid fleet creation command. Format: fc <system_id>",
+		}
+	}
+
+	systemID, err := strconv.ParseInt(parts[1], 10, 32)
+	if err != nil {
+		return CommandResult{
+			Success: false,
+			Message: fmt.Sprintf("Invalid system ID: %s", parts[1]),
+		}
+	}
+
+	creation := &pb.FleetCreation{
+		SystemId: int32(systemID),
+		Owner:    client.username,
+	}
+
+	err = client.SendFleetCreation(creation)
+	if err != nil {
+		return CommandResult{
+			Success: false,
+			Message: fmt.Sprintf("Failed to send fleet creation: %v", err),
+		}
+	}
+
+	return CommandResult{
+		Success: true,
+		Message: fmt.Sprintf("Fleet created in system %d", systemID),
 	}
 }
 

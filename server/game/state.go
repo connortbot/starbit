@@ -14,6 +14,9 @@ const (
 	galaxyWidth  = 5
 	galaxyHeight = 5
 	maxPlayers   = 2
+
+	initialGES = 1000
+	gesPerTick = 2
 )
 
 type State struct {
@@ -23,6 +26,8 @@ type State struct {
 	Galaxy      *pb.GalaxyState
 	mu          sync.Mutex
 	nextFleetID int32
+
+	playerGES map[string]int32
 
 	movedFleets     []int32 // fleets who have moved this tick
 	battlingSystems []int32 // systems who are currently battling
@@ -53,6 +58,7 @@ func NewState() *State {
 			Height:  galaxyHeight,
 		},
 		nextFleetID: 1, // start fleet IDs at 1
+		playerGES:   make(map[string]int32),
 	}
 }
 
@@ -73,6 +79,8 @@ func (g *State) AddPlayer(name string) (bool, error) {
 	}
 	g.Players[name] = player
 	g.PlayerCount = int32(len(g.Players))
+
+	g.playerGES[name] = initialGES
 
 	if len(g.Players) == maxPlayers {
 		g.Started = true
@@ -190,4 +198,20 @@ func (g *State) SetSystemOwner(systemId int32, owner string) (*pb.SystemOwnerCha
 		}, nil
 	}
 	return nil, nil
+}
+
+func (g *State) GetPlayerGES(player string) int32 {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	return g.playerGES[player]
+}
+
+func (g *State) AdjustPlayerGES(player string, amount int32) int32 {
+	if _, exists := g.playerGES[player]; exists {
+		g.playerGES[player] += amount
+		return g.playerGES[player]
+	}
+
+	return 0
 }

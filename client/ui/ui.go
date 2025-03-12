@@ -108,6 +108,7 @@ func RenderGameScreen(
 	selectedY int32,
 	selectedSystem *pb.System,
 	controlMode string,
+	gesAmount int32,
 ) string {
 	var s strings.Builder
 	s.WriteString(renderBoxTop(PlayerBoxWidth, "Starbit", TitleCenter) + "\n")
@@ -144,7 +145,7 @@ func RenderGameScreen(
 		s.WriteString(RenderCommandLine(command))
 		s.WriteString(RenderHelpFooter())
 		s.WriteString("\n")
-		s.WriteString(fmt.Sprintf("   Mode: %s", controlMode))
+		s.WriteString(fmt.Sprintf("   Mode: %s    GES: %d", controlMode, gesAmount))
 	}
 	return s.String()
 }

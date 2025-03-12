@@ -3,11 +3,13 @@ package game
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	pb "starbit/proto"
+	fleets "starbit/server/game/fleets"
 	galaxy "starbit/server/game/galaxy"
 
 	"github.com/quic-go/quic-go"
@@ -116,8 +118,10 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 
 		case "fleet_movement":
 			if msg.TickMsg != nil && len(msg.TickMsg.FleetMovements) > 0 {
+				s.mu.Lock()
 				ownerChange, err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0])
 				if err != nil {
+					s.mu.Unlock()
 					log.Printf("Error moving fleet: %v", err)
 
 					errorMsg := ServerMessage{
@@ -129,7 +133,6 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 					jsonError, _ := json.Marshal(errorMsg)
 					stream.Write(jsonError)
 				} else {
-					s.mu.Lock()
 					s.tickMessage.FleetMovements = append(s.tickMessage.FleetMovements, msg.TickMsg.FleetMovements[0])
 
 					if ownerChange != nil {
@@ -138,6 +141,72 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 
 					s.mu.Unlock()
 				}
+			}
+		case "fleet_creation":
+			if msg.TickMsg != nil && len(msg.TickMsg.FleetCreations) > 0 {
+				s.mu.Lock()
+
+				systemId := msg.TickMsg.FleetCreations[0].SystemId
+				if systemId < 0 || systemId >= int32(len(s.state.Galaxy.Systems)) {
+					s.mu.Unlock()
+					errorMsg := ServerMessage{
+						Type:     "error",
+						Content:  fmt.Sprintf("Invalid system ID: %d", systemId),
+						Username: msg.Username,
+					}
+					jsonError, _ := json.Marshal(errorMsg)
+					stream.Write(jsonError)
+					continue
+				}
+
+				system := s.state.Galaxy.Systems[systemId]
+				if system.Owner != msg.Username {
+					s.mu.Unlock()
+					errorMsg := ServerMessage{
+						Type:     "error",
+						Content:  fmt.Sprintf("You do not own system %d", systemId),
+						Username: msg.Username,
+					}
+					jsonError, _ := json.Marshal(errorMsg)
+					stream.Write(jsonError)
+					continue
+				}
+
+				const fleetCost = 1000
+				currentGES := s.state.GetPlayerGES(msg.Username)
+				if currentGES < fleetCost {
+					s.mu.Unlock()
+					errorMsg := ServerMessage{
+						Type:     "error",
+						Content:  fmt.Sprintf("Not enough GES. Required: %d, Available: %d", fleetCost, currentGES),
+						Username: msg.Username,
+					}
+					jsonError, _ := json.Marshal(errorMsg)
+					stream.Write(jsonError)
+					continue
+				}
+
+				newFleetId := s.state.nextFleetID
+				s.state.nextFleetID++
+
+				newFleet := fleets.NewFleet(newFleetId, msg.Username, galaxy.StartingFleetAttack, galaxy.StartingFleetHealth)
+				galaxy.AddFleetToSystem(s.state.Galaxy, systemId, newFleet)
+
+				newGES := s.state.AdjustPlayerGES(msg.Username, -fleetCost)
+
+				fleetCreation := msg.TickMsg.FleetCreations[0]
+				fleetCreation.FleetId = newFleetId
+				fleetCreation.Owner = msg.Username
+				fleetCreation.Attack = galaxy.StartingFleetAttack
+				fleetCreation.Health = galaxy.StartingFleetHealth
+				s.tickMessage.FleetCreations = append(s.tickMessage.FleetCreations, fleetCreation)
+
+				s.tickMessage.GesUpdates = append(s.tickMessage.GesUpdates, &pb.GESUpdate{
+					Owner:  msg.Username,
+					Amount: newGES,
+				})
+
+				s.mu.Unlock()
 			}
 		}
 	}
@@ -153,8 +222,15 @@ func (s *UDPServer) broadcastTicks() {
 			if s.state == nil {
 				continue
 			}
+			if !s.state.Started {
+				continue
+			}
 
 			s.mu.Lock()
+			if len(s.clients) == 0 {
+				s.mu.Unlock()
+				continue
+			}
 			s.state.mu.Lock()
 
 			remainingBattlingSystems := []int32{}
@@ -217,20 +293,44 @@ func (s *UDPServer) broadcastTicks() {
 
 			s.state.battlingSystems = remainingBattlingSystems
 
-			update := ServerMessage{
-				Type:    "tick",
-				TickMsg: s.tickMessage,
+			baseTickMsg := &pb.TickMsg{
+				FleetMovements:     s.tickMessage.FleetMovements,
+				HealthUpdates:      s.tickMessage.HealthUpdates,
+				FleetDestroyed:     s.tickMessage.FleetDestroyed,
+				SystemOwnerChanges: s.tickMessage.SystemOwnerChanges,
+				FleetCreations:     s.tickMessage.FleetCreations,
 			}
-			jsonUpdate, _ := json.Marshal(update)
 
-			// send to all connected clients
 			for _, streams := range s.clients {
-				for stream := range streams {
+				for stream, username := range streams {
+					clientTickMsg := &pb.TickMsg{
+						FleetMovements:     baseTickMsg.FleetMovements,
+						HealthUpdates:      baseTickMsg.HealthUpdates,
+						FleetDestroyed:     baseTickMsg.FleetDestroyed,
+						SystemOwnerChanges: baseTickMsg.SystemOwnerChanges,
+						FleetCreations:     baseTickMsg.FleetCreations,
+					}
+
+					if username != "" {
+						newGES := s.state.AdjustPlayerGES(username, gesPerTick)
+						clientTickMsg.GesUpdates = append(clientTickMsg.GesUpdates, &pb.GESUpdate{
+							Owner:  username,
+							Amount: newGES,
+						})
+					}
+
+					update := ServerMessage{
+						Type:    "tick",
+						TickMsg: clientTickMsg,
+					}
+
+					jsonUpdate, _ := json.Marshal(update)
 					if _, err := stream.Write(jsonUpdate); err != nil {
-						log.Printf("Error sending tick: %v", err)
+						log.Printf("Error sending tick to %s: %v", username, err)
 					}
 				}
 			}
+
 			s.tickMessage = &pb.TickMsg{}
 			s.state.movedFleets = []int32{}
 

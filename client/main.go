@@ -45,6 +45,8 @@ type model struct {
 	joined      bool
 	galaxy      *pb.GalaxyState
 
+	gesAmount int32
+
 	command   string
 	inspector *ui.ScrollingViewport
 
@@ -93,6 +95,7 @@ func (m model) View() string {
 		m.selectedY,
 		m.galaxy.Systems[selectedSystemIndex],
 		string(m.controlMode),
+		m.gesAmount,
 	)
 }
 

@@ -250,3 +250,17 @@ message TickMsg {
   repeated SystemOwnerChange systemOwnerChanges = 5;
 }
 ```
+
+## Building Fleets
+Now we want to add GES as a currency, and allow players to, for now, simply spend 1000 GES on a new Fleet. We can do this with a:
+```
+fc <system_id>
+```
+And now we add:
+```protobuf
+  message TickMsg {
+    ...
+    repeated GESUpdate gesUpdates = 6;
+    repeated FleetCreation fleetCreations = 7;
+  }
+```

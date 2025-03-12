@@ -23,13 +23,11 @@ func InitializeGalaxy(galaxy *pb.GalaxyState, players map[string]*pb.Player, gen
 	bottomRightCornerIndex := galaxy.Width*galaxy.Height - 1
 
 	p1Fleet := fleets.NewFleet(generateFleetID(), playerNames[0], StartingFleetAttack, StartingFleetHealth)
-	p1Fleet2 := fleets.NewFleet(generateFleetID(), playerNames[0], StartingFleetAttack, StartingFleetHealth)
 	p2Fleet := fleets.NewFleet(generateFleetID(), playerNames[1], StartingFleetAttack, StartingFleetHealth)
 
 	if len(players) == 2 {
 		SetSystemOwner(galaxy, topLeftCornerIndex, playerNames[0])
 		AddFleetToSystem(galaxy, topLeftCornerIndex, p1Fleet)
-		AddFleetToSystem(galaxy, topLeftCornerIndex, p1Fleet2)
 		SetSystemOwner(galaxy, bottomRightCornerIndex, playerNames[1])
 		AddFleetToSystem(galaxy, bottomRightCornerIndex, p2Fleet)
 	} else if len(players) == 3 {

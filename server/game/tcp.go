@@ -67,7 +67,6 @@ func (s *Server) broadcastGameStart() {
 	defer s.mu.Unlock()
 
 	log.Printf("Broadcasting game start to %d clients", len(s.clients))
-
 	for username, client := range s.clients {
 		err := client.Send(&pb.GameUpdate{
 			PlayerCount: s.state.PlayerCount,

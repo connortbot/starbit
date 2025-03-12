@@ -69,6 +69,42 @@ func ProcessFleetDestroyed(galaxy *pb.GalaxyState, fleetDestroyed *pb.FleetDestr
 	return fmt.Errorf("fleet ID %d not found in system ID %d", fleetDestroyed.FleetId, fleetDestroyed.SystemId)
 }
 
+func NewFleet(fleetId int32, owner string, attack int32, health int32) *pb.Fleet {
+	return &pb.Fleet{
+		Id:     fleetId,
+		Owner:  owner,
+		Attack: attack,
+		Health: health,
+	}
+}
+
+func AddFleetToSystem(galaxy *pb.GalaxyState, systemId int32, fleet *pb.Fleet) error {
+	if systemId < 0 || systemId >= int32(len(galaxy.Systems)) {
+		return fmt.Errorf("system with ID %d not found", systemId)
+	}
+	galaxy.Systems[systemId].Fleets = append(galaxy.Systems[systemId].Fleets, fleet)
+	return nil
+}
+
+
+func ProcessFleetCreation(galaxy *pb.GalaxyState, fleetCreation *pb.FleetCreation) error {
+	if fleetCreation.SystemId < 0 || fleetCreation.SystemId >= int32(len(galaxy.Systems)) {
+		return fmt.Errorf("system with ID %d not found", fleetCreation.SystemId)
+	}
+
+	AddFleetToSystem(
+		galaxy,
+		fleetCreation.SystemId,
+		NewFleet(
+			fleetCreation.FleetId,
+			fleetCreation.Owner,
+			fleetCreation.Attack,
+			fleetCreation.Health,
+		),
+	)
+	return nil
+}
+
 func SetSystemOwner(galaxy *pb.GalaxyState, systemId int32, owner string) error {
 	if systemId < 0 || systemId >= int32(len(galaxy.Systems)) {
 		return fmt.Errorf("system with ID %d not found", systemId)

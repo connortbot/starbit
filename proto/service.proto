@@ -70,6 +70,8 @@ message TickMsg {
   repeated HealthUpdate healthUpdates = 3;
   repeated FleetDestroyed fleetDestroyed = 4;
   repeated SystemOwnerChange systemOwnerChanges = 5;
+  repeated GESUpdate gesUpdates = 6;
+  repeated FleetCreation fleetCreations = 7;
 }
 
 message FleetMovement {
@@ -92,4 +94,17 @@ message FleetDestroyed {
 message SystemOwnerChange {
   int32 systemId = 1;
   string owner = 2;
+}
+
+message GESUpdate {
+  string owner = 1;
+  int32 amount = 2;
+}
+
+message FleetCreation {
+  int32 systemId = 1;
+  string owner = 2;
+  int32 fleetId = 3;
+  int32 attack = 4;
+  int32 health = 5;
 }
