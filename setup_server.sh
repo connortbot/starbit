@@ -33,9 +33,9 @@ which protoc-gen-go
 protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/service.proto
 chmod +x run_server.sh
 
-# Configure UDP buffer size for QUIC
-echo "net.core.rmem_max=2500000
-net.core.wmem_max=2500000" | sudo tee -a /etc/sysctl.conf
+# Configure UDP buffer size for QUIC (at least 7168 KiB = 7340032 bytes)
+echo "net.core.rmem_max=8388608
+net.core.wmem_max=8388608" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 
 echo "Setup complete! You can now run ./run_server.sh"
