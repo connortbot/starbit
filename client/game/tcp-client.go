@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type TickMsg struct {
+type GameMsg struct {
 	PlayerCount int32
 	Players     map[string]*pb.Player
 	Started     bool
@@ -22,12 +22,12 @@ type Client struct {
 	conn     *grpc.ClientConn
 	client   pb.GameClient
 	Stream   pb.Game_MaintainConnectionClient
-	tickCh   chan TickMsg // channel for game updates from TCP
+	gameCh   chan GameMsg // channel for game updates from TCP
 }
 
 func NewClient() *Client {
 	return &Client{
-		tickCh: make(chan TickMsg, 10),
+		gameCh: make(chan GameMsg, 10),
 	}
 }
 
@@ -71,7 +71,7 @@ func (c *Client) MaintainConnection(name string) error {
 	return nil
 }
 
-// receives messages from the TCP server and forwards them to the tickCh
+// receives messages from the TCP server and forwards them to the gameCh
 func (c *Client) receiveUpdates() {
 	for {
 		update, err := c.Stream.Recv()
@@ -82,8 +82,8 @@ func (c *Client) receiveUpdates() {
 
 		log.Printf("Received TCP update: started=%v, galaxy=%v", update.Started, update.Galaxy != nil)
 
-		// convert to TickMsg and send to channel
-		c.tickCh <- TickMsg{
+		// convert to GameMsg and send to channel
+		c.gameCh <- GameMsg{
 			PlayerCount: update.PlayerCount,
 			Players:     update.Players,
 			Started:     update.Started,
@@ -92,8 +92,8 @@ func (c *Client) receiveUpdates() {
 	}
 }
 
-func (c *Client) GetUpdateChannel() <-chan TickMsg {
-	return c.tickCh
+func (c *Client) GetUpdateChannel() <-chan GameMsg {
+	return c.gameCh
 }
 
 func (c *Client) Close() {

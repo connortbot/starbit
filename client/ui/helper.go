@@ -114,12 +114,11 @@ func calculateStretchBoxWidth(content string, title string, width int) int {
 }
 
 // wrapInBox takes multi-line content and wraps it in a box with an optional title
-func wrapInBox(content string, width int, title string, titleAlign TitleAlignment) string {
-	// calculate content height by counting newlines
-	lines := strings.Split(strings.TrimRight(content, "\n"), "\n")
-	height := len(lines)
+func wrapInBox(content string, width int, height int, title string, titleAlign TitleAlignment) string {
+	if height <= 0 {
+		height = len(strings.Split(strings.TrimRight(content, "\n"), "\n"))
+	}
 
-	// create viewport with full height to show all content
 	viewport := NewScrollingViewport(
 		content,
 		calculateStretchBoxWidth(content, title, width),

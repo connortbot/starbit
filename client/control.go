@@ -48,7 +48,7 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.players = resp.Players
 				m.started = resp.Started
 				m.galaxy = resp.Galaxy
-				m.inspector = ui.NewInspectWindow(60, m.galaxy.Systems[0])
+				m.inspector = ui.NewInspectWindow(ui.InspectorWidth, m.galaxy.Systems[0])
 				m.controlMode = CommandMode
 
 				// log
@@ -66,13 +66,16 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.username += msg.String()
 			}
 		}
-	case game.TickMsg:
+	case game.GameMsg:
 		m.playerCount = msg.PlayerCount
 		m.started = msg.Started
 		m.players = msg.Players
 		if msg.Galaxy != nil {
 			m.galaxy = msg.Galaxy
 		}
+		return m, nil
+	case game.UDPTickMsg:
+		debugLog.Printf("Menu UDP Tick: %s", string(msg))
 		return m, nil
 	}
 	return m, nil
@@ -142,13 +145,16 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				m.command += msg.String()
 			}
 		}
-	case game.TickMsg:
+	case game.GameMsg:
 		m.playerCount = msg.PlayerCount
 		m.started = msg.Started
 		m.players = msg.Players
 		if msg.Galaxy != nil {
 			m.galaxy = msg.Galaxy
 		}
+		return m, nil
+	case game.UDPTickMsg:
+		debugLog.Printf("UDP Tick: %s", string(msg))
 		return m, nil
 	}
 	return m, nil

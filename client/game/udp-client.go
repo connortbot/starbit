@@ -12,11 +12,13 @@ import (
 	"github.com/quic-go/quic-go"
 )
 
+type UDPTickMsg string
+
 type UDPClient struct {
 	session  quic.Connection
 	stream   quic.Stream
 	username string
-	tickCh   chan TickMsg
+	tickCh   chan UDPTickMsg
 }
 
 // message struct for client-server communication
@@ -37,7 +39,7 @@ type GameUpdate struct {
 
 func NewUDPClient() *UDPClient {
 	return &UDPClient{
-		tickCh: make(chan TickMsg, 10),
+		tickCh: make(chan UDPTickMsg, 10),
 	}
 }
 
@@ -95,7 +97,7 @@ func (c *UDPClient) Register(username string) error {
 	return nil
 }
 
-func (c *UDPClient) GetTickChannel() <-chan TickMsg {
+func (c *UDPClient) GetTickChannel() <-chan UDPTickMsg {
 	return c.tickCh
 }
 
@@ -120,12 +122,7 @@ func (c *UDPClient) handleStream(stream quic.Stream) {
 		// handle different message types
 		switch gameUpdate.Type {
 		case "tick":
-			c.tickCh <- TickMsg{
-				PlayerCount: gameUpdate.PlayerCount,
-				Players:     gameUpdate.Players,
-				Started:     gameUpdate.Started,
-				Galaxy:      gameUpdate.Galaxy,
-			}
+			c.tickCh <- UDPTickMsg("UDP Tick Received")
 
 		case "welcome":
 			log.Println("Registered with UDP server successfully")

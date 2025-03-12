@@ -100,7 +100,6 @@ func (m model) View() string {
 func listenForUDPTicks(udpClient *game.UDPClient, p *tea.Program) {
 	tickCh := udpClient.GetTickChannel()
 	for tick := range tickCh {
-		debugLog.Printf("UDP Tick: %v", tick)
 		p.Send(tick)
 	}
 }

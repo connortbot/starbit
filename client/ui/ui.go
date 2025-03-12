@@ -12,17 +12,25 @@ import (
 
 type TitleAlignment int
 
+// UI Constants for layout
+const (
+	InspectorHeight  = 14
+	InspectorWidth   = 60
+	GalaxyBoxWidth   = 40
+	CommandLineWidth = InspectorWidth + GalaxyBoxWidth + 2
+	PlayerBoxWidth   = 30
+)
+
 var (
 	redStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))
 	greenStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00"))
 )
 
 func RenderCommandLine(command string) string {
-	const commandWidth = 60
 	var s strings.Builder
-	s.WriteString(renderBoxTop(commandWidth, "Command", TitleLeft) + "\n")
-	s.WriteString(padLine("> "+command, commandWidth, true) + "\n")
-	s.WriteString(renderBoxBottom(commandWidth))
+	s.WriteString(renderBoxTop(CommandLineWidth, "Command", TitleLeft) + "\n")
+	s.WriteString(padLine("> "+command, CommandLineWidth, true) + "\n")
+	s.WriteString(renderBoxBottom(CommandLineWidth))
 	return s.String()
 }
 
@@ -47,25 +55,29 @@ func RenderHelpFooter() string {
 
 func GenerateInspectContent(width int, system *pb.System) string {
 	// quick info boxes
-	idInfo := wrapInBox(fmt.Sprintf("ID: %d", system.Id), 10, "", TitleCenter)
-	locationInfo := wrapInBox(fmt.Sprintf("Location: %d, %d", system.X, system.Y), 20, "", TitleCenter)
+	idInfo := wrapInBox(fmt.Sprintf("ID: %d", system.Id), 10, 0, "", TitleCenter)
+	locationInfo := wrapInBox(fmt.Sprintf("Location: %d, %d", system.X, system.Y), 20, 0, "", TitleCenter)
 	owner := "None"
 	if system.Owner != "none" {
 		owner = system.Owner
 	}
 	ownerWidth := lipgloss.Width(fmt.Sprintf("Owner: %s", owner))
-	ownerInfo := wrapInBox(fmt.Sprintf("Owner: %s", owner), ownerWidth+4, "", TitleCenter)
+	ownerInfo := wrapInBox(fmt.Sprintf("Owner: %s", owner), ownerWidth+4, 0, "", TitleCenter)
 
-	fleetListBoxes := []string{}
-	for _, fleet := range system.Fleets {
-		fleetListBoxes = append(fleetListBoxes, RenderFleet(fleet, 50))
+	infoSection := sideBySideBoxes(1, idInfo, locationInfo, ownerInfo)
+
+	var content string
+	if len(system.Fleets) > 0 {
+		fleetListBoxes := []string{}
+		for _, fleet := range system.Fleets {
+			fleetListBoxes = append(fleetListBoxes, RenderFleet(fleet, 50))
+		}
+		fleetContent := listBoxes(1, fleetListBoxes...)
+		content = listBoxes(1, infoSection, fleetContent)
+	} else {
+		content = infoSection
 	}
-	fleetContent := listBoxes(1, fleetListBoxes...)
-	content := listBoxes(
-		1,
-		sideBySideBoxes(1, idInfo, locationInfo, ownerInfo),
-		fleetContent,
-	)
+
 	return content
 }
 
@@ -74,7 +86,7 @@ func NewInspectWindow(width int, system *pb.System) *ScrollingViewport {
 	return NewScrollingViewport(
 		content,
 		calculateStretchBoxWidth(content, "Inspector", width),
-		10,
+		InspectorHeight,
 		"Inspector",
 		TitleCenter,
 	)
@@ -96,11 +108,10 @@ func RenderGameScreen(
 	selectedSystem *pb.System,
 	controlMode string,
 ) string {
-	const playerBoxWidth = 20
 	var s strings.Builder
-	s.WriteString(renderBoxTop(playerBoxWidth, "Starbit", TitleCenter) + "\n")
-	s.WriteString(padLine(fmt.Sprintf("Players: %d/2", len(players)), playerBoxWidth, false) + "\n")
-	s.WriteString(renderMidline(playerBoxWidth))
+	s.WriteString(renderBoxTop(PlayerBoxWidth, "Starbit", TitleCenter) + "\n")
+	s.WriteString(padLine(fmt.Sprintf("Players: %d/2", len(players)), PlayerBoxWidth, false) + "\n")
+	s.WriteString(renderMidline(PlayerBoxWidth))
 
 	var names []string
 	for _, player := range players {
@@ -109,24 +120,24 @@ func RenderGameScreen(
 	sort.Strings(names)
 	for _, name := range names {
 		if name == username {
-			s.WriteString(padLine(fmt.Sprintf("★ %s", name), playerBoxWidth, false) + "\n")
+			s.WriteString(padLine(fmt.Sprintf("★ %s", name), PlayerBoxWidth, false) + "\n")
 		} else {
-			s.WriteString(padLine(fmt.Sprintf("  %s", name), playerBoxWidth, false) + "\n")
+			s.WriteString(padLine(fmt.Sprintf("  %s", name), PlayerBoxWidth, false) + "\n")
 		}
 	}
 
-	s.WriteString(renderMidline(playerBoxWidth))
+	s.WriteString(renderMidline(PlayerBoxWidth))
 	if len(players) == 2 {
-		s.WriteString(padLine(greenStyle.Render("     Ready     "), playerBoxWidth, false) + "\n")
+		s.WriteString(padLine(greenStyle.Render("     Ready     "), PlayerBoxWidth, false) + "\n")
 	} else {
-		s.WriteString(padLine(redStyle.Render("   Not Ready   "), playerBoxWidth, false) + "\n")
+		s.WriteString(padLine(redStyle.Render("   Not Ready   "), PlayerBoxWidth, false) + "\n")
 	}
-	s.WriteString("╰" + strings.Repeat("─", playerBoxWidth-2) + "╯\n\n")
+	s.WriteString("╰" + strings.Repeat("─", PlayerBoxWidth-2) + "╯\n\n")
 
 	if started && galaxy != nil {
 		galaxyContent := RenderGalaxy(galaxy, username, selectedX, selectedY)
-		boxedGalaxyContent := wrapInBox(galaxyContent, 45, "Galaxy", TitleCenter)
-		inspector.UpdateContent(GenerateInspectContent(60, selectedSystem))
+		boxedGalaxyContent := wrapInBox(galaxyContent, GalaxyBoxWidth, 0, "Galaxy", TitleCenter)
+		inspector.UpdateContent(GenerateInspectContent(InspectorWidth, selectedSystem))
 		inspectWindow := RenderInspectWindow(inspector)
 		s.WriteString(sideBySideBoxes(2, boxedGalaxyContent, inspectWindow))
 		s.WriteString(RenderCommandLine(command))
