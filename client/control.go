@@ -51,6 +51,8 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 					return m, nil
 				}
 				debugLog.Printf("TCP client connected successfully")
+				m.gameLogger.AddSystemMessage("TCP client connected successfully")
+				ui.UpdateLogWindow(m.logWindow, m.gameLogger)
 
 				if err := m.udpClient.Connect(); err != nil {
 					debugLog.Printf("Error connecting UDP client: %v", err)
@@ -59,6 +61,8 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 					return m, nil
 				}
 				debugLog.Printf("UDP client connected successfully")
+				m.gameLogger.AddSystemMessage("UDP client connected successfully")
+				ui.UpdateLogWindow(m.logWindow, m.gameLogger)
 
 				go listenForUDPTicks(m.udpClient, program)
 				go listenForUDPErrors(m.udpClient, program)
