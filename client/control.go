@@ -24,24 +24,20 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.client.Close()
 			}
 			return m, tea.Quit
-		case "T", "shift+t":
-			m.inputMode = TCPPortMode
-		case "U", "shift+u":
-			m.inputMode = UDPPortMode
 		case "I", "shift+i":
 			m.inputMode = IPMode
 		case "N", "shift+n":
 			m.inputMode = UsernameMode
 		case "enter":
 			if !m.connected {
-				readyToConnect := m.ipAddress != "" && m.tcpPort != "" && m.udpPort != "" && !m.started
+				readyToConnect := m.ipAddress != "" && !m.started
 				if !readyToConnect {
 					m.gameLogger.AddSystemMessage("Please enter a IP address, TCP port, and UDP port to connect to the server.")
 					ui.UpdateLogWindow(m.logWindow, m.gameLogger)
 					return m, nil
 				}
-				m.client.SetConnectionInfo(m.ipAddress, m.tcpPort)
-				m.udpClient.SetConnectionInfo(m.ipAddress, m.udpPort)
+				m.client.SetConnectionInfo(m.ipAddress, "50051")
+				m.udpClient.SetConnectionInfo(m.ipAddress, "50052")
 
 				m.client.Connect()
 				if err := m.client.Connect(); err != nil {
@@ -129,14 +125,6 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				if len(m.ipAddress) > 0 && !m.started {
 					m.ipAddress = m.ipAddress[:len(m.ipAddress)-1]
 				}
-			} else if m.inputMode == TCPPortMode {
-				if len(m.tcpPort) > 0 && !m.started {
-					m.tcpPort = m.tcpPort[:len(m.tcpPort)-1]
-				}
-			} else if m.inputMode == UDPPortMode {
-				if len(m.udpPort) > 0 && !m.started {
-					m.udpPort = m.udpPort[:len(m.udpPort)-1]
-				}
 			}
 		default:
 			if len(msg.String()) == 1 && !m.started {
@@ -144,10 +132,6 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 					m.username += msg.String()
 				} else if m.inputMode == IPMode {
 					m.ipAddress += msg.String()
-				} else if m.inputMode == TCPPortMode {
-					m.tcpPort += msg.String()
-				} else if m.inputMode == UDPPortMode {
-					m.udpPort += msg.String()
 				}
 			}
 		}

@@ -35,5 +35,5 @@ func RenderFleet(fleet *pb.Fleet, width int) string {
 	atkInfo := fmt.Sprintf("Attack: %d", fleet.Attack)
 	s.WriteString(sideBySideBoxes(4, ownerBox, atkInfo))
 
-	return wrapInBox(s.String(), width, 0, "Fleet", TitleCenter)
+	return wrapInBox(s.String(), width, 0, "Fleet", TitleCenter, nil)
 }

@@ -286,11 +286,11 @@ And on the client side,
 Currently, all the enemies are coloured red. Lets change that.
 ![aint this cool 4](./screenshots/03.png)
 
-## `starbit alpha v0.01`
+## Deploying And Joining Online Servers
 
 I was able to deploy this using some simple terraform to set up a Ubuntu VM with exposed 50051 and 50052 ports. We then update the client to run with those IPs and bam:
 
-> a very sad way to test
+> a very sad way to test. shows a player who has joined, a player who hasnt hit enter yet, a player who put the wrong IP, and a player who has connected to the server, but not joined.
 ![hehe](./screenshots/04.png)
 
 ## Deploying
@@ -320,3 +320,14 @@ source ~/.bashrc
 chmod +x run_server.sh
 ./run_server.sh
 ```
+
+## Better Selection
+We need to make it visually clear, with all of these different shortcuts, which window we have selected.
+
+Let's make it so that a window glows green if it is selected. 
+- **Join Menu**: Glow Username or IP Address green if its selected
+- **Game Menu**: Glow Inspector, Galaxy Box, or Command Line.
+
+And, lets just always have the ports as 50051 and 50052. This makes it easier on the user!
+
+> I also had to add a pinging mechanism to keep the UDP connection alive. I had not implemented this before, and it cause stream timeouts.

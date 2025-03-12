@@ -30,20 +30,26 @@ var (
 	boldStyle  = lipgloss.NewStyle().Bold(true)
 )
 
-func RenderCommandLine(command string) string {
+func RenderCommandLine(command string, isActive bool) string {
+	var style *lipgloss.Style
+	if isActive {
+		s := greenStyle
+		style = &s
+	}
+
 	var s strings.Builder
-	s.WriteString(renderBoxTop(CommandLineWidth, "Command", TitleLeft) + "\n")
-	s.WriteString(padLine("> "+command, CommandLineWidth, true) + "\n")
-	s.WriteString(renderBoxBottom(CommandLineWidth))
+	s.WriteString(renderBoxTop(CommandLineWidth, "Command", TitleLeft, style) + "\n")
+	s.WriteString(padLine("> "+command, CommandLineWidth, true, style) + "\n")
+	s.WriteString(renderBoxBottom(CommandLineWidth, style))
 	return s.String()
 }
 
 func RenderGuideLabel(text string) string {
 	insideWidth := lipgloss.Width(text) + 4
 	var s strings.Builder
-	s.WriteString(renderBoxTop(insideWidth, "", TitleLeft) + "\n")
-	s.WriteString(padLine(text, insideWidth, true) + "\n")
-	s.WriteString(renderBoxBottom(insideWidth))
+	s.WriteString(renderBoxTop(insideWidth, "", TitleLeft, nil) + "\n")
+	s.WriteString(padLine(text, insideWidth, true, nil) + "\n")
+	s.WriteString(renderBoxBottom(insideWidth, nil))
 	return s.String()
 }
 
@@ -59,14 +65,14 @@ func RenderHelpFooter() string {
 
 func GenerateInspectContent(width int, system *pb.System) string {
 	// quick info boxes
-	idInfo := wrapInBox(fmt.Sprintf("ID: %d", system.Id), 10, 0, "", TitleCenter)
-	locationInfo := wrapInBox(fmt.Sprintf("Location: %d, %d", system.X, system.Y), 20, 0, "", TitleCenter)
+	idInfo := wrapInBox(fmt.Sprintf("ID: %d", system.Id), 10, 0, "", TitleCenter, nil)
+	locationInfo := wrapInBox(fmt.Sprintf("Location: %d, %d", system.X, system.Y), 20, 0, "", TitleCenter, nil)
 	owner := "None"
 	if system.Owner != "none" {
 		owner = system.Owner
 	}
 	ownerWidth := lipgloss.Width(fmt.Sprintf("Owner: %s", owner))
-	ownerInfo := wrapInBox(fmt.Sprintf("Owner: %s", owner), ownerWidth+4, 0, "", TitleCenter)
+	ownerInfo := wrapInBox(fmt.Sprintf("Owner: %s", owner), ownerWidth+4, 0, "", TitleCenter, nil)
 
 	infoSection := sideBySideBoxes(1, idInfo, locationInfo, ownerInfo)
 
@@ -102,8 +108,8 @@ func RenderInspectWindow(inspector *ScrollingViewport) string {
 
 func RenderPlayerBox(started bool, username string, players map[string]*pb.Player) string {
 	var s strings.Builder
-	s.WriteString(renderBoxTop(PlayerBoxWidth, "Players", TitleCenter) + "\n")
-	s.WriteString(padLine(fmt.Sprintf("Players: %d", len(players)), PlayerBoxWidth, false) + "\n")
+	s.WriteString(renderBoxTop(PlayerBoxWidth, "Players", TitleCenter, nil) + "\n")
+	s.WriteString(padLine(fmt.Sprintf("Players: %d", len(players)), PlayerBoxWidth, false, nil) + "\n")
 
 	var names []string
 	for _, player := range players {
@@ -113,26 +119,26 @@ func RenderPlayerBox(started bool, username string, players map[string]*pb.Playe
 
 	for _, name := range names {
 		if name == username {
-			s.WriteString(padLine(fmt.Sprintf("★ %s", name), PlayerBoxWidth, false) + "\n")
+			s.WriteString(padLine(fmt.Sprintf("★ %s", name), PlayerBoxWidth, false, nil) + "\n")
 		} else {
-			s.WriteString(padLine(fmt.Sprintf("  %s", name), PlayerBoxWidth, false) + "\n")
+			s.WriteString(padLine(fmt.Sprintf("  %s", name), PlayerBoxWidth, false, nil) + "\n")
 		}
 	}
 
 	remainingLines := PlayerBoxHeight - 3 - len(names)
 	for i := 0; i < remainingLines; i++ {
-		s.WriteString(padLine("", PlayerBoxWidth, false) + "\n")
+		s.WriteString(padLine("", PlayerBoxWidth, false, nil) + "\n")
 	}
 
-	s.WriteString(renderMidline(PlayerBoxWidth))
+	s.WriteString(renderMidline(PlayerBoxWidth, nil))
 
 	if started {
-		s.WriteString(padLine(greenStyle.Render("     Ready     "), PlayerBoxWidth, false) + "\n")
+		s.WriteString(padLine(greenStyle.Render("     Ready     "), PlayerBoxWidth, false, nil) + "\n")
 	} else {
-		s.WriteString(padLine(redStyle.Render("   Not Ready   "), PlayerBoxWidth, false) + "\n")
+		s.WriteString(padLine(redStyle.Render("   Not Ready   "), PlayerBoxWidth, false, nil) + "\n")
 	}
 
-	s.WriteString(renderBoxBottom(PlayerBoxWidth))
+	s.WriteString(renderBoxBottom(PlayerBoxWidth, nil))
 
 	return s.String()
 }
@@ -162,12 +168,32 @@ func RenderGameScreen(
 	}
 
 	if started && galaxy != nil {
+		var galaxyStyle, inspectorStyle *lipgloss.Style
+
+		if controlMode == "Explore" {
+			s := greenStyle
+			galaxyStyle = &s
+		} else if controlMode == "Inspect" {
+			s := greenStyle
+			inspectorStyle = &s
+		}
+
 		galaxyContent := RenderGalaxy(galaxy, username, selectedX, selectedY)
-		boxedGalaxyContent := wrapInBox(galaxyContent, GalaxyBoxWidth, 0, "Galaxy", TitleCenter)
+		boxedGalaxyContent := wrapInBox(galaxyContent, GalaxyBoxWidth, 0, "Galaxy", TitleCenter, galaxyStyle)
+
+		if inspectorStyle != nil {
+			inspector.SetStyle(inspectorStyle)
+		} else {
+			inspector.SetStyle(nil)
+		}
+
 		inspector.UpdateContent(GenerateInspectContent(InspectorWidth, selectedSystem))
 		inspectWindow := RenderInspectWindow(inspector)
 		s.WriteString(sideBySideBoxes(2, boxedGalaxyContent, inspectWindow))
-		s.WriteString(RenderCommandLine(command))
+
+		isCommandActive := controlMode == "Command"
+		s.WriteString(RenderCommandLine(command, isCommandActive))
+
 		s.WriteString(RenderHelpFooter())
 		s.WriteString("\n")
 		s.WriteString(fmt.Sprintf("   Mode: %s    GES: %d", controlMode, gesAmount))
@@ -175,39 +201,54 @@ func RenderGameScreen(
 	return s.String()
 }
 
-func RenderJoinScreen(username string, logWindow *ScrollingViewport, ipAddress string, tcpPort string, udpPort string, connected bool) string {
+func RenderJoinScreen(username string, logWindow *ScrollingViewport, ipAddress string, connected bool, inputMode string) string {
 	var s strings.Builder
 
-	usernameBox := strings.Builder{}
-	usernameBox.WriteString(renderBoxTop(PlayerBoxWidth, "Username (N)", TitleLeft) + "\n")
-	usernameBox.WriteString(padLine("> "+username, PlayerBoxWidth, false) + "\n")
-	usernameBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+	var usernameStyle, ipStyle *lipgloss.Style
 
-	ipBox := strings.Builder{}
-	ipBox.WriteString(renderBoxTop(PlayerBoxWidth, "IP Address (I)", TitleLeft) + "\n")
-	ipBox.WriteString(padLine("> "+ipAddress, PlayerBoxWidth, false) + "\n")
-	ipBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+	if inputMode == "Username" {
+		style := greenStyle
+		usernameStyle = &style
+	}
 
-	tcpBox := strings.Builder{}
-	tcpBox.WriteString(renderBoxTop(PlayerBoxWidth, "TCP Port (T)", TitleLeft) + "\n")
-	tcpBox.WriteString(padLine("> "+tcpPort, PlayerBoxWidth, false) + "\n")
-	tcpBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+	if inputMode == "IP" {
+		style := greenStyle
+		ipStyle = &style
+	}
 
-	udpBox := strings.Builder{}
-	udpBox.WriteString(renderBoxTop(PlayerBoxWidth, "UDP Port (U)", TitleLeft) + "\n")
-	udpBox.WriteString(padLine("> "+udpPort, PlayerBoxWidth, false) + "\n")
-	udpBox.WriteString(renderBoxBottom(PlayerBoxWidth))
+	usernameBox := wrapInBox(
+		"> "+username,
+		PlayerBoxWidth,
+		0,
+		"Username (N)",
+		TitleLeft,
+		usernameStyle,
+	)
 
-	joinButton := strings.Builder{}
+	ipBox := wrapInBox(
+		"> "+ipAddress,
+		PlayerBoxWidth,
+		0,
+		"IP Address (I)",
+		TitleLeft,
+		ipStyle,
+	)
+
 	joinBoxTitle := "Connect to Starbit"
 	if connected {
 		joinBoxTitle = "Join Game"
 	}
-	joinButton.WriteString(renderBoxTop(PlayerBoxWidth, joinBoxTitle, TitleCenter) + "\n")
-	joinButton.WriteString(padLine("Press ENTER", PlayerBoxWidth, true) + "\n")
-	joinButton.WriteString(renderBoxBottom(PlayerBoxWidth))
 
-	inputSection := listBoxes(1, usernameBox.String(), ipBox.String(), tcpBox.String(), udpBox.String(), joinButton.String())
+	joinButton := wrapInBox(
+		"Press ENTER",
+		PlayerBoxWidth,
+		0,
+		joinBoxTitle,
+		TitleCenter,
+		nil,
+	)
+
+	inputSection := listBoxes(1, usernameBox, ipBox, joinButton)
 
 	if logWindow != nil {
 		s.WriteString(sideBySideBoxes(2, inputSection, logWindow.Render()))

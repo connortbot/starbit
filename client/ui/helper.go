@@ -13,49 +13,65 @@ const (
 	TitleRight
 )
 
-func renderBoxBottom(width int) string {
-	return "╰" + strings.Repeat("─", width-2) + "╯\n\n"
+func renderBoxBottom(width int, style *lipgloss.Style) string {
+	bottom := "╰" + strings.Repeat("─", width-2) + "╯\n\n"
+	if style != nil {
+		return style.Render(bottom)
+	}
+	return bottom
 }
 
-func renderMidline(width int) string {
-	return "├" + strings.Repeat("─", width-2) + "┤\n"
+func renderMidline(width int, style *lipgloss.Style) string {
+	midline := "├" + strings.Repeat("─", width-2) + "┤\n"
+	if style != nil {
+		return style.Render(midline)
+	}
+	return midline
 }
 
 // creates the top of a box with an optional title
-func renderBoxTop(width int, title string, alignment TitleAlignment) string {
+func renderBoxTop(width int, title string, alignment TitleAlignment, style *lipgloss.Style) string {
+	var top string
 	if title == "" {
-		return "╭" + strings.Repeat("─", width-2) + "╮"
+		top = "╭" + strings.Repeat("─", width-2) + "╮"
+	} else {
+		titleLen := len(title) // account for space around the title
+		leftWidth := 0
+		rightWidth := 0
+
+		switch alignment {
+		case TitleLeft:
+			leftWidth = 1
+			rightWidth = width - titleLen - 5
+		case TitleRight:
+			leftWidth = width - titleLen - 5
+			rightWidth = 1
+		case TitleCenter:
+			totalSpace := width - titleLen - 4
+			leftWidth = totalSpace / 2
+			rightWidth = totalSpace - leftWidth
+		}
+
+		top = fmt.Sprintf("╭%s %s %s╮",
+			strings.Repeat("─", leftWidth),
+			title,
+			strings.Repeat("─", rightWidth))
 	}
 
-	titleLen := len(title) // account for space around the title
-	leftWidth := 0
-	rightWidth := 0
-
-	switch alignment {
-	case TitleLeft:
-		leftWidth = 1
-		rightWidth = width - titleLen - 5
-	case TitleRight:
-		leftWidth = width - titleLen - 5
-		rightWidth = 1
-	case TitleCenter:
-		totalSpace := width - titleLen - 4
-		leftWidth = totalSpace / 2
-		rightWidth = totalSpace - leftWidth
+	if style != nil {
+		return style.Render(top)
 	}
-
-	return fmt.Sprintf("╭%s %s %s╮",
-		strings.Repeat("─", leftWidth),
-		title,
-		strings.Repeat("─", rightWidth))
+	return top
 }
 
 // padLine pads a string to fit in the box with borders
 // If follow is true and content overflows, it will show the right side of the content
 // If follow is false, it will truncate the content to fit
-func padLine(content string, width int, follow bool) string {
+func padLine(content string, width int, follow bool, style *lipgloss.Style) string {
 	contentWidth := lipgloss.Width(content)
 	padding := width - contentWidth - 3 // -3 for "│ " and "│"
+
+	var line string
 
 	if padding < 0 {
 		if follow {
@@ -69,7 +85,7 @@ func padLine(content string, width int, follow bool) string {
 					break
 				}
 			}
-			return fmt.Sprintf("│ %s│", visibleContent)
+			line = fmt.Sprintf("│ %s│", visibleContent)
 		} else {
 			// truncate the content
 			truncated := content
@@ -80,10 +96,31 @@ func padLine(content string, width int, follow bool) string {
 					break
 				}
 			}
-			return fmt.Sprintf("│ %s│", truncated)
+			line = fmt.Sprintf("│ %s│", truncated)
+		}
+	} else {
+		line = fmt.Sprintf("│ %s%s│", content, strings.Repeat(" ", padding))
+	}
+
+	if style != nil {
+		// we only want to style the border chars, not the content
+		parts := strings.SplitN(line, " ", 2)
+		if len(parts) == 2 {
+			// style just the first border char
+			styled := style.Render(parts[0])
+			// get the content and padding
+			contentParts := strings.SplitN(parts[1], "│", 2)
+			if len(contentParts) == 2 {
+				// style just the last border char
+				styledEnd := style.Render("│")
+				line = styled + " " + contentParts[0] + styledEnd
+			} else {
+				line = styled + " " + parts[1]
+			}
 		}
 	}
-	return fmt.Sprintf("│ %s%s│", content, strings.Repeat(" ", padding))
+
+	return line
 }
 
 // returns the minimum width a box would need to display the content
@@ -114,7 +151,7 @@ func calculateStretchBoxWidth(content string, title string, width int) int {
 }
 
 // wrapInBox takes multi-line content and wraps it in a box with an optional title
-func wrapInBox(content string, width int, height int, title string, titleAlign TitleAlignment) string {
+func wrapInBox(content string, width int, height int, title string, titleAlign TitleAlignment, style *lipgloss.Style) string {
 	if height <= 0 {
 		height = len(strings.Split(strings.TrimRight(content, "\n"), "\n"))
 	}
@@ -126,6 +163,11 @@ func wrapInBox(content string, width int, height int, title string, titleAlign T
 		title,
 		titleAlign,
 	)
+
+	if style != nil {
+		viewport.SetStyle(style)
+	}
+
 	return viewport.Render()
 }
 

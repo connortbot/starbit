@@ -39,9 +39,7 @@ const (
 type InputMode string
 
 const (
-	IPMode InputMode = "IP"
-	TCPPortMode InputMode = "TCP Port"
-	UDPPortMode InputMode = "UDP Port"
+	IPMode       InputMode = "IP"
 	UsernameMode InputMode = "Username"
 )
 
@@ -70,8 +68,6 @@ type model struct {
 	controlMode ControlMode
 	inputMode   InputMode
 	ipAddress   string
-	tcpPort     string
-	udpPort     string
 	connected   bool
 
 	udpClient *game.UDPClient
@@ -100,7 +96,7 @@ func (m model) View() string {
 	}
 
 	if !m.joined {
-		return ui.RenderJoinScreen(m.username, m.logWindow, m.ipAddress, m.tcpPort, m.udpPort, m.connected)
+		return ui.RenderJoinScreen(m.username, m.logWindow, m.ipAddress, m.connected, string(m.inputMode))
 	}
 
 	selectedSystemIndex := m.selectedY*m.galaxy.Width + m.selectedX
@@ -155,12 +151,13 @@ func main() {
 	gameLogger.AddSystemMessage("Welcome to Starbit! Enter your username to join.")
 	logWindow := ui.NewLogWindow(gameLogger, ui.LogBoxWidth, ui.LogBoxHeight)
 
-	program := tea.NewProgram(model{
+	program = tea.NewProgram(model{
 		connected:  false,
 		client:     client,
 		udpClient:  udpClient,
 		gameLogger: gameLogger,
 		logWindow:  logWindow,
+		inputMode:  UsernameMode,
 	}, tea.WithAltScreen())
 
 	// run the UI
