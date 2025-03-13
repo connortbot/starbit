@@ -10,9 +10,9 @@ RELEASE_DIR="releases/$VERSION_CODE"
 mkdir -p "$RELEASE_DIR"
 
 GOOS=windows GOARCH=amd64 go build -o "$RELEASE_DIR/starbit-client-windows.exe" ./client
-GOOS=darwin GOARCH=amd64 go build -o "$RELEASE_DIR/starbit-client-macos" ./client
+GOOS=darwin GOARCH=amd64 go build -o "$RELEASE_DIR/starbit-client-macos-intel" ./client
+GOOS=darwin GOARCH=arm64 go build -o "$RELEASE_DIR/starbit-client-macos-arm64" ./client
 GOOS=linux GOARCH=amd64 go build -o "$RELEASE_DIR/starbit-client-linux" ./client
-
 
 GOOS=linux GOARCH=amd64 go build -o "$RELEASE_DIR/starbit-server-linux" ./server
 
