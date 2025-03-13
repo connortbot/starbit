@@ -1,50 +1,81 @@
-# starbit
-A lightweight, tick-based space strategy game in your terminal over gRPC.
+# ![Starbit](./screenshots/06.png)
+# starbit `v0.01`
+A lightweight, space RTS game played in the terminal using QUIC and gRPC.
+Written fully in Go.
 
-## Game
-`starbit` takes 2-4 players per game. 
-Each Player controls an respective Empire in a tiny, randomly-generated Galaxy. The Galaxy is made up of a grid of Systems. 
+## 📚 Table of Contents
+- [Game Overview](#game-overview)
+- [How to Play](#how-to-play)
+- [Controls](#controls)
+- [Deployment](#deployment)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
 
-A Player wins by getting control over the entire Galaxy.
+## Game Overview
+`starbit` is a space real-time strategy game where 2-4 players compete to conquer a the galaxy. Each player controls an Empire and aims to gain control over the entire galaxy by building and moving fleets to battle opponents.
 
-### Gameplay
-Players begin at roughly 4 opposite ends of the Galaxy, each starting with 1 System, 1 Factory, and 1 Scout.
-The game is updated in 5 second ticks. Players can perform as many actions as they want between each tick, and they all go simultaneously into effect in the next tick.
+### How to Play
+- Get 2-4 players together.
+- The game updates every 500ms.
+- Players begin with a starting System and a *Fleet*.
 
-All actions by players can be divided into:
-- Gaining resources
-- Creating units
-- Battling for control over Systems
+**GES**:
+Players earn 2 GES (General Energy Substance) per tick. GES is used to create new Fleets, which cost 1000 GES each.
 
-The actions are performed via typing commands into the terminal.
+**Fleets**: All Fleets start with 100 health and 5 attack power.
+- Create Fleets in systems you control.
+- Combat resolves automatically when Fleets from different players occupy the same system.
+- During combat, each ship randomly selects an enemy to attack and deals damage each tick.
+- A player wins by eliminating all opposing Fleets and controlling all systems.
 
-#### Combat
-Players move Fleets into Systems, which fight other enemy Fleets. During each tick, the Fleets will deal and take damage.
-Once there is only one Player's Fleet remaining, that Player owns the Sector. 
-Owning a Sector yields a 10% bonus to ALL stats.
+### Controls
+- **Navigation**: Press `Shift+E` and use arrow keys to move around the galaxy.
+- **Inspector**: Press `Shift+I` to open the inspector panel, and use arrow keys to scroll up and down.
+- **Commands**: Press `Shift+C` to access the command line, where you can enter:
+  - `fc <system>` - Create a new Fleet in the specified system
+  - `fm <fleet id> <from system id> <to system id>` - Move a Fleet from one system to another
 
-Every Fleet has:
-- Attack
-- Ex Attack (high damage)
-- Armor (weighted average % protection against Ex Attack)
-- Evasion (weighted average % protection against Attack)
-- Health (death upon 0, add more ships to increase)
-Fleets are comprised of Ships, which can be added to Fleets thereby shifting the stats.
+## Deployment
+To deploy the server, follow these steps:
 
-**Tick Resolution:**
-1. Each Fleet rolls Evasion
-2. Each Fleet chooses a random enemy Fleet and deals Attack. Mitigated by their Evasion.
-3. Each Fleet then deals Ex Attack to the same Fleet. Mitigated by their Armor.
-4. Every Fleet with Health <= 0, destroy.
+1. **Create a key-pair** in AWS Ohio (`us-east-2`). Download the `.pem` file and place it in `~/.ssh/starbit.pem`.
 
-Fleets receive a 50% penalty if they are not properly supplied. This leads us to...
+2. **Set up the infrastructure**:
+   ```shell
+   cd infrastructure
+   terraform init
+   terraform apply -var="key_name=starbit"
+   ```
 
-#### Resources & Supply
-There is only one currency in this game: General Energy Substance (GES).
-Players build Factories, which generate GES/tick. GES is used to create Fleets, and all Fleets require spending of GES per tick.
+3. **Connect to the server**:
+   ```shell
+   ssh -i ~/.ssh/starbit.pem ubuntu@<IP>
+   ```
 
-Players must create Convoys. Each Convoy is able to 'supply' an amount of GES. 
-**Example:** Jonathan spends around X GES/tick on Fleets. Each Convoy supplies around Y GES/tick. If Y < X, the Fleets get a supply penalty.
-> Its important to note that Fixed costs (building Ships for Fleets, and Factories) don't contribute to Variable Costs (maintenance GES/tick)
+4. **Clone the repository and set up the server**:
+   ```shell
+   git clone https://github.com/connortbot/starbit.git
+   cd starbit
+   chmod +x setup_server.sh
+   ./setup_server.sh
+   source ~/.bashrc
+   chmod +x run_server.sh
+   ./run_server.sh
+   ```
 
-Players can build an infinite amount of Factories. They are not located in Systems.
+5. **Destroy the infrastructure** when done:
+   ```shell
+   terraform destroy -var="key_name=starbit"
+   ```
+
+Optionally, you may also use the `starbit-server` from one of our releases.
+
+## Roadmap
+- Add Ex(plosive) Attack, Evasion, and Armor.
+- Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
+- Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
+- Combat Bonuses (outnumbering, ownership of system, etc.)
+
+## Contributing
+Contributions are welcome! Please open an issue or submit a pull request.
+Contact me at (loiconnor8@gmail.com).
