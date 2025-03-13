@@ -247,3 +247,11 @@ func RenderJoinScreen(username string, logWindow *ScrollingViewport, ipAddress s
 
 	return s.String()
 }
+
+func RenderFirstScreen() string {
+	height := 50
+	width := 125
+	content := strings.Repeat("\n", 48) + "For the best experience, expand your terminal window until you can see the edges of this box.\nPRESS ENTER WHEN READY :)"
+	box := wrapInBox(content, width, height, "Starbit", TitleLeft, &greenStyle)
+	return box
+}

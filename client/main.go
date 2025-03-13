@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"io"
 
 	"starbit/client/game"
 	ui "starbit/client/ui"
@@ -31,6 +31,8 @@ const (
 )
 
 type model struct {
+	firstScreen bool
+
 	username    string
 	err         error
 	client      *game.Client
@@ -68,6 +70,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var result model
 	var cmd tea.Cmd
 
+	if m.firstScreen {
+		result, cmd = m.HandleFirstScreen(msg)
+		return result, cmd
+	}
+
 	if !m.started {
 		result, cmd = m.HandleMenu(msg)
 	} else {
@@ -80,6 +87,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if m.err != nil {
 		return fmt.Sprintf("Error: %v\nPress Ctrl+C to quit\n", m.err)
+	}
+
+	if m.firstScreen {
+		return ui.RenderFirstScreen()
 	}
 
 	if !m.joined {
@@ -150,6 +161,7 @@ func main() {
 	logWindow := ui.NewLogWindow(gameLogger, ui.LogBoxWidth, ui.LogBoxHeight)
 
 	program = tea.NewProgram(model{
+		firstScreen: true,
 		connected:  false,
 		client:     client,
 		udpClient:  udpClient,

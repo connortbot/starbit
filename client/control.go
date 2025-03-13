@@ -16,6 +16,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+func (m model) HandleFirstScreen(msg tea.Msg) (model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			m.firstScreen = false
+		}
+	}
+	return m, nil
+}
+
 func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
