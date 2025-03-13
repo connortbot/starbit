@@ -60,6 +60,9 @@ You'll need:
    ```shell
    # Create a directory for the server
    mkdir -p ~/starbit
+
+   echo "net.core.rmem_max=8388608 net.core.wmem_max=8388608" | sudo tee -a /etc/sysctl.conf
+   sudo sysctl -p
    
    # Download the executable directly to the server
    curl -L https://github.com/connortbot/starbit/releases/download/v0.01/starbit-server-linux -o ~/starbit/starbit-server
