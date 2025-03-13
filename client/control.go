@@ -173,6 +173,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				if m.selectedY > 0 {
 					m.selectedY--
 				}
+				m.inspector.ScrollToTop()
 			}
 		case "down":
 			if m.controlMode == InspectMode {
@@ -181,6 +182,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				if m.galaxy != nil && m.selectedY < m.galaxy.Height-1 {
 					m.selectedY++
 				}
+				m.inspector.ScrollToTop()
 			}
 		case "shift+up":
 			if m.controlMode == InspectMode {
@@ -195,12 +197,14 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				if m.selectedX > 0 {
 					m.selectedX--
 				}
+				m.inspector.ScrollToTop()
 			}
 		case "right":
 			if m.controlMode == ExploreMode {
 				if m.galaxy != nil && m.selectedX < m.galaxy.Width-1 {
 					m.selectedX++
 				}
+				m.inspector.ScrollToTop()
 			}
 		case "enter":
 			if m.controlMode == CommandMode && m.command != "" {
