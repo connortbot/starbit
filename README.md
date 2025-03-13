@@ -36,7 +36,9 @@ Players earn 2 GES (General Energy Substance) per tick. GES is used to create ne
   - `fm <fleet id> <from system id> <to system id>` - Move a Fleet from one system to another
 
 ## Deployment
-To deploy the server, follow these steps:
+You'll need:
+- AWS Account (Free Tier is fine)
+- Terraform (or you can do it manually)
 
 1. **Create a key-pair** in AWS Ohio (`us-east-2`). Download the `.pem` file and place it in `~/.ssh/starbit.pem`.
 
@@ -51,6 +53,32 @@ To deploy the server, follow these steps:
    ```shell
    ssh -i ~/.ssh/starbit.pem ubuntu@<IP>
    ```
+
+### Option 1: Using Pre-built Server Executable (Recommended)
+
+4. **Download and run the server directly** (recommended):
+   ```shell
+   # Create a directory for the server
+   mkdir -p ~/starbit
+   
+   # Download the executable directly to the server
+   curl -L https://github.com/connortbot/starbit/releases/download/v0.01/starbit-server-linux -o ~/starbit/starbit-server
+   
+   # Or alternatively with wget:
+   # wget https://github.com/connortbot/starbit/releases/download/v0.01/starbit-server-linux -O ~/starbit/starbit-server
+   
+   # Make it executable
+   chmod +x ~/starbit/starbit-server
+   
+   # Run the server
+   ~/starbit/starbit-server
+   ```
+5. **Destroy the infrastructure** when done:
+   ```shell
+   terraform destroy -var="key_name=starbit"
+   ```
+
+### Option 2: Building from Source
 
 4. **Clone the repository and set up the server**:
    ```shell
@@ -67,8 +95,6 @@ To deploy the server, follow these steps:
    ```shell
    terraform destroy -var="key_name=starbit"
    ```
-
-Optionally, you may also use the `starbit-server` from one of our releases.
 
 ## Roadmap
 - Add Ex(plosive) Attack, Evasion, and Armor.
