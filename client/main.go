@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"io"
 
 	"starbit/client/game"
 	ui "starbit/client/ui"
@@ -12,21 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var debugLog *log.Logger
 var program *tea.Program
-
-func init() {
-	if len(os.Getenv("DEBUG")) > 0 {
-		f, err := tea.LogToFile("debug"+os.Getenv("USER")+".log", "debug")
-		if err != nil {
-			fmt.Println("fatal:", err)
-			os.Exit(1)
-		}
-		debugLog = log.New(f, "", log.LstdFlags)
-	} else {
-		debugLog = log.New(os.Stderr, "", log.LstdFlags)
-	}
-}
 
 type ControlMode string
 
@@ -135,16 +122,27 @@ func listenForUDPErrors(udpClient *game.UDPClient, p *tea.Program) {
 func listenForTCPUpdates(client *game.Client, p *tea.Program) {
 	updateCh := client.GetUpdateChannel()
 	for update := range updateCh {
-		debugLog.Printf("TCP Update: players=%d, started=%v, hasGalaxy=%v",
+		log.Printf("TCP Update: players=%d, started=%v, hasGalaxy=%v",
 			len(update.Players), update.Started, update.Galaxy != nil)
 		p.Send(update)
 	}
 }
 
 func main() {
-	debugLog.Println("Initializing UDP client...")
+	if len(os.Getenv("DEBUG")) > 0 {
+		f, err := tea.LogToFile("debug"+os.Getenv("USER")+".log", "debug")
+		if err != nil {
+			fmt.Println("fatal:", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+	} else {
+		log.SetOutput(io.Discard)
+	}
+	log.Println("Initializing game...")
+	log.Println("Initializing UDP client...")
 	udpClient := game.NewUDPClient()
-	debugLog.Println("initializing TCP client...")
+	log.Println("initializing TCP client...")
 	client := game.NewClient()
 
 	gameLogger := ui.NewGameLogger(100) // store up to 100 log messages
