@@ -105,14 +105,17 @@ You'll need:
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
 
+Known Bugs:
+- View a System with lots of Fleets, and then navigate to another and the Inspector window will be very long and blank. (scrolled down)
+- Earlier clients are not notified of users joining the game until the game starts
+
 User Reqs:
-- Lower damage/tick
 - Movement cooldown on fleets
+- Stay in system for multiple ticks to get control
 - Win condition of owning >70% of the Galaxy.
 - Owning systems gets you more GES/tick
-- Stay in system for multiple ticks to get control
 - List of your fleets on the right side
-- restrict movement in the grid? (e.g choke points)
+- Restrict movement in the grid? (e.g choke points)
 - Set automatic terminal size
 
 ## Contributing
