@@ -101,15 +101,17 @@ You'll need:
 
 ## Roadmap
 
-#### `v0.02`
+#### `v0.02` Patch Notes
+Bug Fixes:
+- Fixed bug where Inspector window would get too long because of the content of a previously long System info. Window now scrolls to top when switching Systems.
+- Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
+
 - Add a 10 tick cooldown on Fleet movement
 - Entering a system requires 10 ticks to gain ownership
 - There is no base GES/tick. Each owned system grants 1 GES/tick.
 - To win, you now only need to own `(galaxyHeight - 1) * galaxyWidth)` systems
 - Add a list of your fleets on the right side of the UI with IDs and stats
 - Terminal size automatically set to accomodate game UI on start
-- Fix earlier clients not being notified of users joining game until game starts
-- Make inspector window scroll to top automatically if changing systems 
 
 - Add Ex(plosive) Attack, Evasion, and Armor.
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
