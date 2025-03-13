@@ -1,5 +1,5 @@
 # ![Starbit](./screenshots/06.png)
-# starbit `v0.01.3`
+# starbit `v0.02.0`
 A lightweight, space RTS game played in the terminal using QUIC and gRPC.
 Written fully in Go.
 
@@ -65,10 +65,10 @@ You'll need:
    sudo sysctl -p
    
    # Download the executable directly to the server
-   curl -L https://github.com/connortbot/starbit/releases/download/v0.01.3/starbit-server-linux -o ~/starbit/starbit-server
+   curl -L https://github.com/connortbot/starbit/releases/download/v0.02.0/starbit-server-linux -o ~/starbit/starbit-server
    
    # Or alternatively with wget:
-   # wget https://github.com/connortbot/starbit/releases/download/v0.01.3/starbit-server-linux -O ~/starbit/starbit-server
+   # wget https://github.com/connortbot/starbit/releases/download/v0.02.0/starbit-server-linux -O ~/starbit/starbit-server
    
    # Make it executable
    chmod +x ~/starbit/starbit-server
@@ -100,23 +100,24 @@ You'll need:
    ```
 
 ## Roadmap
+
+#### `v0.02`
+- Add a 10 tick cooldown on Fleet movement
+- Entering a system requires 10 ticks to gain ownership
+- There is no base GES/tick. Each owned system grants 1 GES/tick.
+- To win, you now only need to own `(galaxyHeight - 1) * galaxyWidth)` systems
+- Add a list of your fleets on the right side of the UI with IDs and stats
+- Terminal size automatically set to accomodate game UI on start
+- Fix earlier clients not being notified of users joining game until game starts
+- Make inspector window scroll to top automatically if changing systems 
+
 - Add Ex(plosive) Attack, Evasion, and Armor.
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
 
-Known Bugs:
-- View a System with lots of Fleets, and then navigate to another and the Inspector window will be very long and blank. (scrolled down)
-- Earlier clients are not notified of users joining the game until the game starts
-
 User Reqs:
-- Movement cooldown on fleets
-- Stay in system for multiple ticks to get control
-- Win condition of owning >70% of the Galaxy.
-- Owning systems gets you more GES/tick
-- List of your fleets on the right side
 - Restrict movement in the grid? (e.g choke points)
-- Set automatic terminal size
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
