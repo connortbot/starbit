@@ -107,6 +107,8 @@ You'll need:
 
 User Reqs:
 - Lower damage/tick
+- Movement cooldown on fleets
+- Win condition of owning >70% of the Galaxy.
 - Owning systems gets you more GES/tick
 - Stay in system for multiple ticks to get control
 - List of your fleets on the right side
