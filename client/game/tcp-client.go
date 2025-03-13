@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"fmt"
-
+	"strings"
 	pb "starbit/proto"
 
 	"google.golang.org/grpc"
@@ -43,8 +43,9 @@ func (c *Client) Connect() error {
 	if c.ip == "" || c.tcpPort == "" {
 		return fmt.Errorf("ip and tcpPort must be set")
 	}
+	address := c.ip + ":" + c.tcpPort
 	// always use conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	conn, err := grpc.NewClient(c.ip+":"+c.tcpPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(strings.ReplaceAll(address, "\x00", ""), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}

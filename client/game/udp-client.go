@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"strings"
 
 	pb "starbit/proto"
 
@@ -61,7 +62,8 @@ func (c *UDPClient) Connect() error {
 	}
 
 	// connect to the server
-	session, err := quic.DialAddr(ctx, c.ip+":"+c.udpPort, &tls.Config{
+	address := c.ip + ":" + c.udpPort
+	session, err := quic.DialAddr(ctx, strings.ReplaceAll(address, "\x00", ""), &tls.Config{
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"starbit-quic"},
 	}, nil)
