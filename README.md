@@ -1,5 +1,5 @@
 # ![Starbit](./screenshots/06.png)
-# starbit `v0.01.2`
+# starbit `v0.01.3`
 A lightweight, space RTS game played in the terminal using QUIC and gRPC.
 Written fully in Go.
 
@@ -65,10 +65,10 @@ You'll need:
    sudo sysctl -p
    
    # Download the executable directly to the server
-   curl -L https://github.com/connortbot/starbit/releases/download/v0.01.2/starbit-server-linux -o ~/starbit/starbit-server
+   curl -L https://github.com/connortbot/starbit/releases/download/v0.01.3/starbit-server-linux -o ~/starbit/starbit-server
    
    # Or alternatively with wget:
-   # wget https://github.com/connortbot/starbit/releases/download/v0.01.2/starbit-server-linux -O ~/starbit/starbit-server
+   # wget https://github.com/connortbot/starbit/releases/download/v0.01.3/starbit-server-linux -O ~/starbit/starbit-server
    
    # Make it executable
    chmod +x ~/starbit/starbit-server
