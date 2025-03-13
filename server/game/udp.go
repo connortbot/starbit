@@ -187,7 +187,7 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 					continue
 				}
 
-				const fleetCost = 1000
+				const fleetCost = 500
 				currentGES := s.state.GetPlayerGES(msg.Username)
 				if currentGES < fleetCost {
 					s.mu.Unlock()

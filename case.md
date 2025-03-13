@@ -252,7 +252,7 @@ message TickMsg {
 ```
 
 ## Building Fleets
-Now we want to add GES as a currency, and allow players to, for now, simply spend 1000 GES on a new Fleet. We can do this with a:
+Now we want to add GES as a currency, and allow players to, for now, simply spend 500 GES on a new Fleet. We can do this with a:
 ```
 fc <system_id>
 ```

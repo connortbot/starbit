@@ -1,5 +1,5 @@
 # ![Starbit](./screenshots/06.png)
-# starbit `v0.01`
+# starbit `v0.01.2`
 A lightweight, space RTS game played in the terminal using QUIC and gRPC.
 Written fully in Go.
 
@@ -20,7 +20,7 @@ Written fully in Go.
 - Players begin with a starting System and a *Fleet*.
 
 **GES**:
-Players earn 2 GES (General Energy Substance) per tick. GES is used to create new Fleets, which cost 1000 GES each.
+Players earn 2 GES (General Energy Substance) per tick. GES is used to create new Fleets, which cost 500 GES each.
 
 **Fleets**: All Fleets start with 100 health and 5 attack power.
 - Create Fleets in systems you control.
@@ -65,10 +65,10 @@ You'll need:
    sudo sysctl -p
    
    # Download the executable directly to the server
-   curl -L https://github.com/connortbot/starbit/releases/download/v0.01/starbit-server-linux -o ~/starbit/starbit-server
+   curl -L https://github.com/connortbot/starbit/releases/download/v0.01.2/starbit-server-linux -o ~/starbit/starbit-server
    
    # Or alternatively with wget:
-   # wget https://github.com/connortbot/starbit/releases/download/v0.01/starbit-server-linux -O ~/starbit/starbit-server
+   # wget https://github.com/connortbot/starbit/releases/download/v0.01.2/starbit-server-linux -O ~/starbit/starbit-server
    
    # Make it executable
    chmod +x ~/starbit/starbit-server
@@ -104,6 +104,14 @@ You'll need:
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
+
+User Reqs:
+- Lower damage/tick
+- Owning systems gets you more GES/tick
+- Stay in system for multiple ticks to get control
+- List of your fleets on the right side
+- restrict movement in the grid? (e.g choke points)
+- Set automatic terminal size
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.

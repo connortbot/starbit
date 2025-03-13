@@ -9,7 +9,7 @@ import (
 
 const (
 	StartingFleetHealth = 100
-	StartingFleetAttack = 5
+	StartingFleetAttack = 1
 )
 
 func InitializeGalaxy(galaxy *pb.GalaxyState, players map[string]*pb.Player, generateFleetID func() int32) {
