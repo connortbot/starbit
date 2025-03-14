@@ -70,6 +70,9 @@ You'll need:
    
    # Or alternatively with wget:
    # wget https://github.com/connortbot/starbit/releases/download/v0.02/starbit-server-linux -O ~/starbit/starbit-server
+
+   # To run with a specific amoutn of players (max 4)
+   ~/starbit/starbit-server -maxPlayers=2
    
    # Make it executable
    chmod +x ~/starbit/starbit-server
@@ -92,7 +95,7 @@ You'll need:
    ./setup_server.sh
    source ~/.bashrc
    chmod +x run_server.sh
-   ./run_server.sh
+   ./run_server.sh <num_players>
    ```
 
 5. **Destroy the infrastructure** when done:
