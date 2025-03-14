@@ -134,7 +134,7 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 		case "fleet_movement":
 			if msg.TickMsg != nil && len(msg.TickMsg.FleetMovements) > 0 {
 				s.mu.Lock()
-				ownerChange, err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0])
+				ownerChange, err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0], s.state.tickCount)
 				if err != nil {
 					s.mu.Unlock()
 					log.Printf("Error moving fleet: %v", err)
@@ -187,7 +187,6 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 					continue
 				}
 
-				const fleetCost = 500
 				currentGES := s.state.GetPlayerGES(msg.Username)
 				if currentGES < fleetCost {
 					s.mu.Unlock()
@@ -330,9 +329,9 @@ func (s *UDPServer) broadcastTicks() {
 
 			// check for win conditions
 			var victor string
-			totalSystems := s.state.Galaxy.Width * s.state.Galaxy.Height
+			winCondition := s.state.Galaxy.Width * (s.state.Galaxy.Height - 1)
 			for player, systems := range s.state.ownedSystems {
-				if int32(len(systems)) == totalSystems {
+				if int32(len(systems)) == winCondition {
 					victor = player
 					break
 				}
@@ -346,6 +345,7 @@ func (s *UDPServer) broadcastTicks() {
 				FleetDestroyed:     s.tickMessage.FleetDestroyed,
 				SystemOwnerChanges: s.tickMessage.SystemOwnerChanges,
 				FleetCreations:     s.tickMessage.FleetCreations,
+				TickCount:          s.state.tickCount,
 			}
 
 			// Handle victory case
@@ -360,6 +360,7 @@ func (s *UDPServer) broadcastTicks() {
 				newState := NewState()
 				newState.Started = false
 				s.state = newState
+				baseTickMsg.TickCount = 0
 
 				if s.tcpServer != nil {
 					s.tcpServer.SetState(newState)
@@ -398,14 +399,19 @@ func (s *UDPServer) broadcastTicks() {
 						FleetDestroyed:     baseTickMsg.FleetDestroyed,
 						SystemOwnerChanges: baseTickMsg.SystemOwnerChanges,
 						FleetCreations:     baseTickMsg.FleetCreations,
+						TickCount:          baseTickMsg.TickCount,
 						Victory:            baseTickMsg.Victory,
 					}
 
 					if username != "" {
-						newGES := s.state.AdjustPlayerGES(username, gesPerTick)
+						ownedSystems := s.state.ownedSystems[username]
+						numOwnedSystems := len(ownedSystems)
+						rate := gesPerSystem * int32(numOwnedSystems)
+						newGES := s.state.AdjustPlayerGES(username, rate)
 						clientTickMsg.GesUpdates = append(clientTickMsg.GesUpdates, &pb.GESUpdate{
 							Owner:  username,
 							Amount: newGES,
+							Rate:   rate,
 						})
 					}
 
@@ -423,6 +429,8 @@ func (s *UDPServer) broadcastTicks() {
 
 			s.tickMessage = &pb.TickMsg{}
 			s.state.movedFleets = []int32{}
+			s.state.tickCount++
+			log.Printf("==== TICK COUNT: %d ====", s.state.tickCount)
 
 			s.state.mu.Unlock()
 			s.mu.Unlock()

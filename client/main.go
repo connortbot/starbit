@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"io"
 
 	"starbit/client/game"
 	ui "starbit/client/ui"
@@ -18,9 +18,10 @@ var program *tea.Program
 type ControlMode string
 
 const (
-	CommandMode ControlMode = "Command"
-	InspectMode ControlMode = "Inspect"
-	ExploreMode ControlMode = "Explore"
+	CommandMode   ControlMode = "Command"
+	InspectMode   ControlMode = "Inspect"
+	ExploreMode   ControlMode = "Explore"
+	FleetListMode ControlMode = "FleetList"
 )
 
 type InputMode string
@@ -31,6 +32,8 @@ const (
 )
 
 type model struct {
+	firstScreen bool
+
 	username    string
 	err         error
 	client      *game.Client
@@ -41,12 +44,16 @@ type model struct {
 	galaxy      *pb.GalaxyState
 
 	gesAmount int32
+	gesRate   int32
 
 	command   string
 	inspector *ui.ScrollingViewport
+	fleetList *ui.ScrollingViewport
 
 	gameLogger *ui.GameLogger
 	logWindow  *ui.ScrollingViewport
+
+	tickCount int32
 
 	// selection coordinates for galaxy nav
 	selectedX int32
@@ -58,6 +65,9 @@ type model struct {
 	connected   bool
 
 	udpClient *game.UDPClient
+
+	ownedFleets   []*pb.Fleet
+	fleetLocations map[int32]int32
 }
 
 func (m model) Init() tea.Cmd {
@@ -67,6 +77,11 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var result model
 	var cmd tea.Cmd
+
+	if m.firstScreen {
+		result, cmd = m.HandleFirstScreen(msg)
+		return result, cmd
+	}
 
 	if !m.started {
 		result, cmd = m.HandleMenu(msg)
@@ -82,6 +97,10 @@ func (m model) View() string {
 		return fmt.Sprintf("Error: %v\nPress Ctrl+C to quit\n", m.err)
 	}
 
+	if m.firstScreen {
+		return ui.RenderFirstScreen()
+	}
+
 	if !m.joined {
 		return ui.RenderJoinScreen(m.username, m.logWindow, m.ipAddress, m.connected, string(m.inputMode))
 	}
@@ -95,11 +114,14 @@ func (m model) View() string {
 		m.command,
 		m.inspector,
 		m.logWindow,
+		m.fleetList,
 		m.selectedX,
 		m.selectedY,
 		m.galaxy.Systems[selectedSystemIndex],
 		string(m.controlMode),
 		m.gesAmount,
+		m.gesRate,
+		m.tickCount,
 	)
 }
 
@@ -150,14 +172,15 @@ func main() {
 	logWindow := ui.NewLogWindow(gameLogger, ui.LogBoxWidth, ui.LogBoxHeight)
 
 	program = tea.NewProgram(model{
-		connected:  false,
-		client:     client,
-		udpClient:  udpClient,
-		gameLogger: gameLogger,
-		logWindow:  logWindow,
-		inputMode:  UsernameMode,
+		firstScreen: true,
+		connected:   false,
+		client:      client,
+		udpClient:   udpClient,
+		gameLogger:  gameLogger,
+		logWindow:   logWindow,
+		inputMode:   UsernameMode,
 
-		ipAddress: "3.133.113.171",
+		ipAddress: "localhost",
 	}, tea.WithAltScreen())
 
 	// run the UI

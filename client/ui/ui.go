@@ -13,15 +13,20 @@ import (
 type TitleAlignment int
 
 // UI Constants for layout
+// 180 x 45
 const (
-	InspectorHeight  = 14
-	InspectorWidth   = 60
-	GalaxyBoxWidth   = 40
-	CommandLineWidth = InspectorWidth + GalaxyBoxWidth + 2
-	PlayerBoxWidth   = 30
-	PlayerBoxHeight  = 15
-	LogBoxWidth      = 70
-	LogBoxHeight     = 15
+	PlayerBoxWidth  = 30
+	PlayerBoxHeight = 15
+	LogBoxWidth     = 90
+	LogBoxHeight    = 15
+
+	GalaxyBoxWidth  = 40
+	InspectorHeight = 14
+	InspectorWidth  = PlayerBoxWidth + LogBoxWidth - GalaxyBoxWidth
+
+	CommandLineWidth = InspectorWidth + GalaxyBoxWidth + 1
+	FleetListWidth   = 70
+	FleetListHeight  = LogBoxHeight + InspectorHeight + 3 + 2
 )
 
 var (
@@ -51,9 +56,10 @@ func RenderHelpFooter() string {
 	cmdGuide := RenderGuideLabel("Cmd: Shift+C")
 	inspectGuide := RenderGuideLabel("Inspect: Shift+I")
 	exploreGuide := RenderGuideLabel("Explore: Shift+E")
+	fleetListGuide := RenderGuideLabel("Fleets: Shift+F")
 	quitGuide := RenderGuideLabel("Quit: Ctrl+C")
 
-	return sideBySideBoxes(2, cmdGuide, inspectGuide, exploreGuide, quitGuide)
+	return sideBySideBoxes(2, cmdGuide, inspectGuide, exploreGuide, fleetListGuide, quitGuide)
 }
 
 func GenerateInspectContent(width int, system *pb.System) string {
@@ -144,11 +150,14 @@ func RenderGameScreen(
 	command string,
 	inspector *ScrollingViewport,
 	logWindow *ScrollingViewport,
+	fleetList *ScrollingViewport,
 	selectedX int32,
 	selectedY int32,
 	selectedSystem *pb.System,
 	controlMode string,
 	gesAmount int32,
+	gesRate int32,
+	currentTickCount int32,
 ) string {
 	var s strings.Builder
 
@@ -165,27 +174,34 @@ func RenderGameScreen(
 		var boxedGalaxyStyle *lipgloss.Style
 		var boxedCommandStyle *lipgloss.Style
 		var boxedInspectorStyle *lipgloss.Style
+		var boxedFleetListStyle *lipgloss.Style
 		if controlMode == "Explore" {
 			boxedGalaxyStyle = &greenStyle
 		} else if controlMode == "Inspect" {
 			boxedInspectorStyle = &greenStyle
 		} else if controlMode == "Command" {
 			boxedCommandStyle = &greenStyle
+		} else if controlMode == "FleetList" {
+			boxedFleetListStyle = &greenStyle
 		}
 
 		boxedGalaxyContent := wrapInBox(galaxyContent, GalaxyBoxWidth, 0, "Galaxy", TitleCenter, boxedGalaxyStyle)
 		inspector.UpdateContent(GenerateInspectContent(InspectorWidth, selectedSystem))
 		inspectWindow := inspector.Render(boxedInspectorStyle)
+		fleetListWindow := fleetList.Render(boxedFleetListStyle)
 
 		gameplayViewportContent := sideBySideBoxes(1, boxedGalaxyContent, inspectWindow)
 		gameContent := listBoxes(0,
 			gameplayViewportContent,
-			RenderCommandLine(command, boxedCommandStyle) + "\n",
+			RenderCommandLine(command, boxedCommandStyle)+"\n",
 			RenderHelpFooter()) + "\n"
-		s.WriteString(listBoxes(0,
-			infoSection,
-			gameContent,
-			fmt.Sprintf("   Mode: %s    GES: %d", controlMode, gesAmount)))
+		leftContent := listBoxes(0, infoSection, gameContent, fmt.Sprintf("   Mode: %s    GES: %d (%d/sol)    Sol: %d", controlMode, gesAmount, gesRate, currentTickCount))
+		s.WriteString(
+			sideBySideBoxes(1,
+				leftContent,
+				fleetListWindow,
+			),
+		)
 	} else {
 		s.WriteString(infoSection)
 	}
@@ -246,4 +262,13 @@ func RenderJoinScreen(username string, logWindow *ScrollingViewport, ipAddress s
 	}
 
 	return s.String()
+}
+
+func RenderFirstScreen() string {
+	width := GalaxyBoxWidth + InspectorWidth + FleetListWidth + 3
+	height := LogBoxHeight + InspectorHeight + 12
+
+	content := strings.Repeat("\n", height-2) + "For the best experience, expand your terminal window until you can see the edges of this box.\nPRESS ENTER WHEN READY :)"
+	box := wrapInBox(content, width, height, "Starbit", TitleLeft, &greenStyle)
+	return box
 }

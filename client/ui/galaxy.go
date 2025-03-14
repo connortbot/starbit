@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -34,6 +35,11 @@ func ResetEnemyColors() {
 // InitializeEnemyColors creates a consistent color mapping for enemy players
 // this should be called once when the galaxy state is first received
 func InitializeEnemyColors(galaxy *pb.GalaxyState, myUsername string) {
+	if galaxy == nil || galaxy.Systems == nil {
+		log.Printf("Warning: Attempted to initialize enemy colors with nil galaxy state")
+		return
+	}
+
 	enemyColorMap = make(map[string]lipgloss.Style)
 
 	uniqueOwners := make(map[string]bool)
@@ -62,6 +68,11 @@ func InitializeEnemyColors(galaxy *pb.GalaxyState, myUsername string) {
 }
 
 func RenderGalaxy(galaxy *pb.GalaxyState, username string, selectedX, selectedY int32) string {
+	if galaxy == nil || galaxy.Systems == nil {
+		log.Printf("Warning: Attempted to render galaxy with nil galaxy state")
+		return "No galaxy data available"
+	}
+
 	if enemyColorMap == nil {
 		InitializeEnemyColors(galaxy, username)
 	}

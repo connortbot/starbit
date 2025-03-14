@@ -1,5 +1,5 @@
 # ![Starbit](./screenshots/06.png)
-# starbit `v0.01.3`
+# starbit `v0.02.0`
 A lightweight, space RTS game played in the terminal using QUIC and gRPC.
 Written fully in Go.
 
@@ -12,20 +12,20 @@ Written fully in Go.
 - [Contributing](#contributing)
 
 ## Game Overview
-`starbit` is a space real-time strategy game where 2-4 players compete to conquer a the galaxy. Each player controls an Empire and aims to gain control over the entire galaxy by building and moving fleets to battle opponents.
+`starbit` is a space real-time strategy game where 2-4 players compete to conquer the galaxy. Each player controls an Empire and aims to gain control over the entire galaxy by building and moving fleets to battle opponents.
 
 ### How to Play
-- Get 2-4 players together.
-- The game updates every 500ms.
-- Players begin with a starting System and a *Fleet*.
+A game takes place across multiple `sols`, a unit of time. Think of it like a tick, where every ~500ms, everything updates (e.g battles, movement, etc.)
+
+Players begin with a starting System and a *Fleet*.
 
 **GES**:
-Players earn 2 GES (General Energy Substance) per tick. GES is used to create new Fleets, which cost 500 GES each.
+Players earn 1 GES (General Energy Substance) per system owned. GES is used to create new Fleets, which cost 2000 GES each.
 
-**Fleets**: All Fleets start with 100 health and 5 attack power.
-- Create Fleets in systems you control.
+**Fleets**: All Fleets start with 100 health and 1 attack.
+- Can only be created in Systems you control.
 - Combat resolves automatically when Fleets from different players occupy the same system.
-- During combat, each ship randomly selects an enemy to attack and deals damage each tick.
+- During combat, each ship randomly selects an enemy to attack and deals damage each sol.
 - A player wins by eliminating all opposing Fleets and controlling all systems.
 
 ### Controls
@@ -34,6 +34,7 @@ Players earn 2 GES (General Energy Substance) per tick. GES is used to create ne
 - **Commands**: Press `Shift+C` to access the command line, where you can enter:
   - `fc <system>` - Create a new Fleet in the specified system
   - `fm <fleet id> <from system id> <to system id>` - Move a Fleet from one system to another
+- **Fleets**: Press `Shift+F` to select the fleets list, and arrow keys to scroll up and down.
 
 ## Deployment
 You'll need:
@@ -65,10 +66,10 @@ You'll need:
    sudo sysctl -p
    
    # Download the executable directly to the server
-   curl -L https://github.com/connortbot/starbit/releases/download/v0.01.3/starbit-server-linux -o ~/starbit/starbit-server
+   curl -L https://github.com/connortbot/starbit/releases/download/v0.02.0/starbit-server-linux -o ~/starbit/starbit-server
    
    # Or alternatively with wget:
-   # wget https://github.com/connortbot/starbit/releases/download/v0.01.3/starbit-server-linux -O ~/starbit/starbit-server
+   # wget https://github.com/connortbot/starbit/releases/download/v0.02.0/starbit-server-linux -O ~/starbit/starbit-server
    
    # Make it executable
    chmod +x ~/starbit/starbit-server
@@ -100,23 +101,34 @@ You'll need:
    ```
 
 ## Roadmap
+
+#### `v0.02` Patch Notes
+Fleets:
+- Movement Cooldown: 0 Sols -> 10 sols
+- Cost: 500 GES -> 2000 GES
+
+Misc Updates:
+- Win Condition: `(galaxyHeight) * galaxyWidth)` -> `(galaxyHeight - 1) * galaxyWidth)`
+- GES/sol: 1 -> 0
+- GES/system: 0 -> 1
+- Added a list showing your fleets on the right side, including current locations for easy `fm` commands!
+- Added a first screen to notify players to make their terminal window large enough! Unfortunately, we can't set it via code.
+
+Bug Fixes:
+- Fixed bug where Inspector window would get too long because of the content of a previously long System info. Window now scrolls to top when switching Systems.
+- Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
+- Fixed bug where first few players to join don't colour in systems correctly for enemies.
+
+#### Future Updates
 - Add Ex(plosive) Attack, Evasion, and Armor.
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
-
-Known Bugs:
-- View a System with lots of Fleets, and then navigate to another and the Inspector window will be very long and blank. (scrolled down)
-- Earlier clients are not notified of users joining the game until the game starts
-
-User Reqs:
-- Movement cooldown on fleets
-- Stay in system for multiple ticks to get control
-- Win condition of owning >70% of the Galaxy.
-- Owning systems gets you more GES/tick
-- List of your fleets on the right side
 - Restrict movement in the grid? (e.g choke points)
-- Set automatic terminal size
+- Change `fm x y z` to just `fm <id> <destination>` since we already track owned fleets, we don't need to provide location in the command.
+- `sel <system_id>` which selects a group of fleets
+- `spl <t/b>` which selects `(t)top` half or `(b)bottom` half of current selection
+- `sm <system_id>` which moves selections to the system.
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.

@@ -59,7 +59,7 @@ func (s *Server) JoinGame(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRes
 
 	s.mu.Unlock()
 	log.Printf("Player joined: %s (started: %v)", req.Username, s.state.Started)
-
+	s.broadcastLobbyInfo()
 	// if game just started, notify all connected clients with galaxy data
 	if gameJustStarted {
 		log.Printf("Game just started, broadcasting to %d clients", len(s.clients))
@@ -67,6 +67,25 @@ func (s *Server) JoinGame(ctx context.Context, req *pb.JoinRequest) (*pb.JoinRes
 	}
 
 	return response, nil
+}
+
+// note that this is currently just broadcastGameStart() without the galaxy info
+func (s *Server) broadcastLobbyInfo() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	log.Printf("Broadcasting lobby info to %d clients", len(s.clients))
+	for username, client := range s.clients {
+		err := client.Send(&pb.GameUpdate{
+			PlayerCount: s.state.PlayerCount,
+			Players:     s.state.Players,
+			Started:     s.state.Started,
+		})
+		if err != nil {
+			log.Printf("Error sending initial state to %s: %v", username, err)
+		} else {
+			log.Printf("Sent initial game state to %s", username)
+		}
+	}
 }
 
 // broadcastGameStart sends the initial game state with galaxy data to all connected clients
