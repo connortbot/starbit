@@ -65,11 +65,9 @@ func InitializeEnemyColors(galaxy *pb.GalaxyState, myUsername string) {
 			enemyColorMap[owner] = systemRedStyle
 		}
 	}
-	log.Printf("enemyColorMap: %v", enemyColorMap)
 }
 
 func RenderGalaxy(galaxy *pb.GalaxyState, username string, selectedX, selectedY int32) string {
-	// Check if galaxy is nil to prevent nil pointer dereference
 	if galaxy == nil || galaxy.Systems == nil {
 		log.Printf("Warning: Attempted to render galaxy with nil galaxy state")
 		return "No galaxy data available"
