@@ -80,6 +80,9 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.connected = true
 				return m, nil
 			} else {
+				if m.joined {
+					return m, nil
+				}
 				log.Printf("Joining Game")
 				readyToJoin := m.username != ""
 				if !readyToJoin {
@@ -113,6 +116,10 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.players = resp.Players
 				m.started = resp.Started
 				m.galaxy = resp.Galaxy
+
+				ui.ResetEnemyColors()
+				ui.InitializeEnemyColors(m.galaxy, m.username)
+
 				m.inspector = ui.NewInspectWindow(ui.InspectorWidth, m.galaxy.Systems[0])
 				m.fleetList = ui.NewFleetListWindow(m.ownedFleets, m.fleetLocations, ui.FleetListWidth, ui.FleetListHeight, m.tickCount)
 				m.controlMode = CommandMode
@@ -159,6 +166,8 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 		if msg.Started {
 			m.gameLogger.AddSystemMessage("Game started")
 		}
+		ui.ResetEnemyColors()
+		ui.InitializeEnemyColors(m.galaxy, m.username)
 		return m, nil
 	}
 	return m, nil
@@ -268,6 +277,8 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 			}
 		}
+		ui.ResetEnemyColors()
+		ui.InitializeEnemyColors(m.galaxy, m.username)
 		return m, nil
 	case *pb.TickMsg:
 		log.Printf("UDP Tick: %s", string(msg.Message))

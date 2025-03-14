@@ -350,3 +350,10 @@ In `v0.01`, players are incentivized to just stack ships in one system. This mea
 - Get more GES per systems owned
 - etc.
 
+We also wantd to add some more strategy rather than the core gameplay being, "can you type fast enough to move the fleets". Thus, we should add a movement cooldown!
+
+The resulting game ended having a surprising amount of depth for the minor nature of the changes. But a full game ended up having some real dimension to the gameplay. More thinking, more typing, and more fun!
+
+The next thing to do in `v0.03` and `v0.04` would be to add *more combat depth and a supply system to make overscaling difficult*. After that, the game is pretty much done!
+![v0.02](./screenshots/07.png)
+![v0.02](./screenshots/08.png)

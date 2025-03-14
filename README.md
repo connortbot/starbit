@@ -117,6 +117,7 @@ Misc Updates:
 Bug Fixes:
 - Fixed bug where Inspector window would get too long because of the content of a previously long System info. Window now scrolls to top when switching Systems.
 - Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
+- Fixed bug where first few players to join don't colour in systems correctly for enemies.
 
 #### Future Updates
 - Add Ex(plosive) Attack, Evasion, and Armor.
@@ -124,6 +125,10 @@ Bug Fixes:
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
 - Restrict movement in the grid? (e.g choke points)
+- Change `fm x y z` to just `fm <id> <destination>` since we already track owned fleets, we don't need to provide location in the command.
+- `sel <system_id>` which selects a group of fleets
+- `spl <t/b>` which selects `(t)top` half or `(b)bottom` half of current selection
+- `sm <system_id>` which moves selections to the system.
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
