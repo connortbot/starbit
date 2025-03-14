@@ -102,6 +102,7 @@ message SystemOwnerChange {
 message GESUpdate {
   string owner = 1;
   int32 amount = 2;
+  int32 rate = 3;
 }
 
 message FleetCreation {

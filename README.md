@@ -20,7 +20,7 @@ A game takes place across multiple `sols`, a unit of time. Think of it like a ti
 Players begin with a starting System and a *Fleet*.
 
 **GES**:
-Players earn 2 GES (General Energy Substance) per sol. GES is used to create new Fleets, which cost 2000 GES each.
+Players earn 1 GES (General Energy Substance) per system owned. GES is used to create new Fleets, which cost 2000 GES each.
 
 **Fleets**: All Fleets start with 100 health and 1 attack.
 - Can only be created in Systems you control.
@@ -108,6 +108,8 @@ Fleets:
 - Cost: 500 GES -> 2000 GES
 
 Misc Updates:
+- GES/sol: 1 -> 0
+- GES/system: 0 -> 1
 - Added a list showing your fleets on the right side, including current locations for easy `fm` commands!
 - Added a first screen to notify players to make their terminal window large enough! Unfortunately, we can't set it via code.
 
@@ -117,7 +119,6 @@ Bug Fixes:
 
 #### Future Updates
 - Entering a system requires 10 ticks to gain ownership
-- There is no base GES/tick. Each owned system grants 1 GES/tick.
 - To win, you now only need to own `(galaxyHeight - 1) * galaxyWidth)` systems
 
 - Add Ex(plosive) Attack, Evasion, and Armor.

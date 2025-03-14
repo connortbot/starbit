@@ -404,10 +404,14 @@ func (s *UDPServer) broadcastTicks() {
 					}
 
 					if username != "" {
-						newGES := s.state.AdjustPlayerGES(username, gesPerTick)
+						ownedSystems := s.state.ownedSystems[username]
+						numOwnedSystems := len(ownedSystems)
+						rate := gesPerSystem * int32(numOwnedSystems)
+						newGES := s.state.AdjustPlayerGES(username, rate)
 						clientTickMsg.GesUpdates = append(clientTickMsg.GesUpdates, &pb.GESUpdate{
 							Owner:  username,
 							Amount: newGES,
+							Rate:   rate,
 						})
 					}
 

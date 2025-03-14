@@ -15,7 +15,8 @@ const (
 	galaxyHeight = 5
 
 	initialGES = 1000
-	gesPerTick = 2
+	gesPerTick = 0
+	gesPerSystem = 1
 	fleetCost  = 2000
 
 	FLEET_MOVEMENT_COOLDOWN = 10

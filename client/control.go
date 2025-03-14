@@ -349,8 +349,9 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 		if len(msg.GesUpdates) > 0 {
 			for _, update := range msg.GesUpdates {
 				if update.Owner == m.username {
-					log.Printf("Received GES update: %d", update.Amount)
+					log.Printf("Received GES update: %d (Rate: %d)", update.Amount, update.Rate)
 					m.gesAmount = update.Amount
+					m.gesRate = update.Rate
 				}
 			}
 		}

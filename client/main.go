@@ -44,6 +44,7 @@ type model struct {
 	galaxy      *pb.GalaxyState
 
 	gesAmount int32
+	gesRate   int32
 
 	command   string
 	inspector *ui.ScrollingViewport
@@ -119,6 +120,7 @@ func (m model) View() string {
 		m.galaxy.Systems[selectedSystemIndex],
 		string(m.controlMode),
 		m.gesAmount,
+		m.gesRate,
 		m.tickCount,
 	)
 }

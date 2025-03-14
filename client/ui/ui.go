@@ -156,6 +156,7 @@ func RenderGameScreen(
 	selectedSystem *pb.System,
 	controlMode string,
 	gesAmount int32,
+	gesRate int32,
 	currentTickCount int32,
 ) string {
 	var s strings.Builder
@@ -194,7 +195,7 @@ func RenderGameScreen(
 			gameplayViewportContent,
 			RenderCommandLine(command, boxedCommandStyle)+"\n",
 			RenderHelpFooter()) + "\n"
-		leftContent := listBoxes(0, infoSection, gameContent, fmt.Sprintf("   Mode: %s    GES: %d    Sol: %d", controlMode, gesAmount, currentTickCount))
+		leftContent := listBoxes(0, infoSection, gameContent, fmt.Sprintf("   Mode: %s    GES: %d (%d/sol)    Sol: %d", controlMode, gesAmount, gesRate, currentTickCount))
 		s.WriteString(
 			sideBySideBoxes(1,
 				leftContent,
