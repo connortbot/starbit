@@ -18,9 +18,10 @@ var program *tea.Program
 type ControlMode string
 
 const (
-	CommandMode ControlMode = "Command"
-	InspectMode ControlMode = "Inspect"
-	ExploreMode ControlMode = "Explore"
+	CommandMode   ControlMode = "Command"
+	InspectMode   ControlMode = "Inspect"
+	ExploreMode   ControlMode = "Explore"
+	FleetListMode ControlMode = "FleetList"
 )
 
 type InputMode string
@@ -46,6 +47,7 @@ type model struct {
 
 	command   string
 	inspector *ui.ScrollingViewport
+	fleetList *ui.ScrollingViewport
 
 	gameLogger *ui.GameLogger
 	logWindow  *ui.ScrollingViewport
@@ -60,6 +62,9 @@ type model struct {
 	connected   bool
 
 	udpClient *game.UDPClient
+
+	ownedFleets   []*pb.Fleet
+	fleetLocations map[int32]int32
 }
 
 func (m model) Init() tea.Cmd {
@@ -106,6 +111,7 @@ func (m model) View() string {
 		m.command,
 		m.inspector,
 		m.logWindow,
+		m.fleetList,
 		m.selectedX,
 		m.selectedY,
 		m.galaxy.Systems[selectedSystemIndex],
@@ -162,14 +168,14 @@ func main() {
 
 	program = tea.NewProgram(model{
 		firstScreen: true,
-		connected:  false,
-		client:     client,
-		udpClient:  udpClient,
-		gameLogger: gameLogger,
-		logWindow:  logWindow,
-		inputMode:  UsernameMode,
+		connected:   false,
+		client:      client,
+		udpClient:   udpClient,
+		gameLogger:  gameLogger,
+		logWindow:   logWindow,
+		inputMode:   UsernameMode,
 
-		ipAddress: "3.133.113.171",
+		ipAddress: "localhost",
 	}, tea.WithAltScreen())
 
 	// run the UI

@@ -5,6 +5,31 @@ import (
 	pb "starbit/proto"
 )
 
+func RemoveFromFleetArray(fleetsArr []*pb.Fleet, idToRemove int32) []*pb.Fleet {
+	for i, fleet := range fleetsArr {
+		if fleet.Id == idToRemove {
+			return append(fleetsArr[:i], fleetsArr[i+1:]...)
+		}
+	}
+	return fleetsArr
+}
+
+// USE AS LITTLE AS POSSIBLE, VERY INEFFICIENT
+// used on game startup to fill ownedFleets (see model)
+func FindOwnedFleetsAndLocations(galaxy *pb.GalaxyState, username string) ([]*pb.Fleet, map[int32]int32) {
+	arr := make([]*pb.Fleet, 0)
+	locations := make(map[int32]int32)
+	for _, system := range galaxy.Systems {
+		for _, fleet := range system.Fleets {
+			if fleet.Owner == username {
+				arr = append(arr, fleet)
+				locations[fleet.Id] = system.Id
+			}
+		}
+	}
+	return arr, locations
+}
+
 func MoveFleet(galaxy *pb.GalaxyState, fleetMovement *pb.FleetMovement) error {
 	if fleetMovement.FromSystemId < 0 || fleetMovement.FromSystemId >= int32(len(galaxy.Systems)) {
 		return fmt.Errorf("source system with ID %d not found", fleetMovement.FromSystemId)
@@ -110,5 +135,16 @@ func SetSystemOwner(galaxy *pb.GalaxyState, systemId int32, owner string) error 
 		return fmt.Errorf("system with ID %d not found", systemId)
 	}
 	galaxy.Systems[systemId].Owner = owner
+	return nil
+}
+
+func GetFleet(galaxy *pb.GalaxyState, systemId int32, fleetId int32) *pb.Fleet {
+	system := galaxy.Systems[systemId]
+	for _, fleet := range system.Fleets {
+		if fleet.Id == fleetId {
+			return fleet
+		}
+	}
+
 	return nil
 }
