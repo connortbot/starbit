@@ -108,7 +108,7 @@ Fleets:
 - Cost: 500 GES -> 2000 GES
 
 Misc Updates:
-: Win Condition: `(galaxyHeight) * galaxyWidth)` -> `(galaxyHeight - 1) * galaxyWidth)`
+- Win Condition: `(galaxyHeight) * galaxyWidth)` -> `(galaxyHeight - 1) * galaxyWidth)`
 - GES/sol: 1 -> 0
 - GES/system: 0 -> 1
 - Added a list showing your fleets on the right side, including current locations for easy `fm` commands!

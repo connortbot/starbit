@@ -340,3 +340,13 @@ And so after all that, we finally have a working version of `starbit`, complete 
 
 ![nice1](./screenshots/05.png)
 ![nice2](./screenshots/06.png)
+
+## `v0.02` Update
+I ended up running some beta test runs with friends, and it went well! I was really happy with how the high-pressure, rapid typing gameplay turned out to be. And, it was satisfying seeing things update in the screen.
+
+For a `v0.02` update, I wanted to add some quick changes that would push the game from being a little bit stale to having just enough depth.
+In `v0.01`, players are incentivized to just stack ships in one system. This means we should punish it by rewarding players who try to conquer area,
+- Change the win condition so that someone can win without taking everything
+- Get more GES per systems owned
+- etc.
+
