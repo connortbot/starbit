@@ -1,4 +1,4 @@
-# ![Starbit](./screenshots/06.png)
+# ![Starbit](./screenshots/08.png)
 # starbit `v0.02.0`
 A lightweight, space RTS game played in the terminal using QUIC and gRPC.
 Written fully in Go.
