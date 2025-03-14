@@ -12,20 +12,20 @@ Written fully in Go.
 - [Contributing](#contributing)
 
 ## Game Overview
-`starbit` is a space real-time strategy game where 2-4 players compete to conquer a the galaxy. Each player controls an Empire and aims to gain control over the entire galaxy by building and moving fleets to battle opponents.
+`starbit` is a space real-time strategy game where 2-4 players compete to conquer the galaxy. Each player controls an Empire and aims to gain control over the entire galaxy by building and moving fleets to battle opponents.
 
 ### How to Play
-- Get 2-4 players together.
-- The game updates every 500ms.
-- Players begin with a starting System and a *Fleet*.
+A game takes place across multiple `sols`, a unit of time. Think of it like a tick, where every ~500ms, everything updates (e.g battles, movement, etc.)
+
+Players begin with a starting System and a *Fleet*.
 
 **GES**:
-Players earn 2 GES (General Energy Substance) per tick. GES is used to create new Fleets, which cost 500 GES each.
+Players earn 2 GES (General Energy Substance) per sol. GES is used to create new Fleets, which cost 2000 GES each.
 
-**Fleets**: All Fleets start with 100 health and 5 attack power.
-- Create Fleets in systems you control.
+**Fleets**: All Fleets start with 100 health and 1 attack.
+- Can only be created in Systems you control.
 - Combat resolves automatically when Fleets from different players occupy the same system.
-- During combat, each ship randomly selects an enemy to attack and deals damage each tick.
+- During combat, each ship randomly selects an enemy to attack and deals damage each sol.
 - A player wins by eliminating all opposing Fleets and controlling all systems.
 
 ### Controls
@@ -34,6 +34,7 @@ Players earn 2 GES (General Energy Substance) per tick. GES is used to create ne
 - **Commands**: Press `Shift+C` to access the command line, where you can enter:
   - `fc <system>` - Create a new Fleet in the specified system
   - `fm <fleet id> <from system id> <to system id>` - Move a Fleet from one system to another
+- **Fleets**: Press `Shift+F` to select the fleets list, and arrow keys to scroll up and down.
 
 ## Deployment
 You'll need:
@@ -102,6 +103,9 @@ You'll need:
 ## Roadmap
 
 #### `v0.02` Patch Notes
+Fleets:
+- Movement Cooldown: 0 Sols -> 10 sols
+- Cost: 500 GES -> 2000 GES
 
 Misc Updates:
 - Added a list showing your fleets on the right side, including current locations for easy `fm` commands!
@@ -111,7 +115,7 @@ Bug Fixes:
 - Fixed bug where Inspector window would get too long because of the content of a previously long System info. Window now scrolls to top when switching Systems.
 - Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
 
-- Add a 10 tick cooldown on Fleet movement
+#### Future Updates
 - Entering a system requires 10 ticks to gain ownership
 - There is no base GES/tick. Each owned system grants 1 GES/tick.
 - To win, you now only need to own `(galaxyHeight - 1) * galaxyWidth)` systems
@@ -120,8 +124,6 @@ Bug Fixes:
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
-
-User Reqs:
 - Restrict movement in the grid? (e.g choke points)
 
 ## Contributing

@@ -134,7 +134,7 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 		case "fleet_movement":
 			if msg.TickMsg != nil && len(msg.TickMsg.FleetMovements) > 0 {
 				s.mu.Lock()
-				ownerChange, err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0])
+				ownerChange, err := s.state.MoveFleet(msg.Username, msg.TickMsg.FleetMovements[0], s.state.tickCount)
 				if err != nil {
 					s.mu.Unlock()
 					log.Printf("Error moving fleet: %v", err)
@@ -187,7 +187,6 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 					continue
 				}
 
-				const fleetCost = 500
 				currentGES := s.state.GetPlayerGES(msg.Username)
 				if currentGES < fleetCost {
 					s.mu.Unlock()
@@ -346,6 +345,7 @@ func (s *UDPServer) broadcastTicks() {
 				FleetDestroyed:     s.tickMessage.FleetDestroyed,
 				SystemOwnerChanges: s.tickMessage.SystemOwnerChanges,
 				FleetCreations:     s.tickMessage.FleetCreations,
+				TickCount:          s.state.tickCount,
 			}
 
 			// Handle victory case
@@ -360,6 +360,7 @@ func (s *UDPServer) broadcastTicks() {
 				newState := NewState()
 				newState.Started = false
 				s.state = newState
+				baseTickMsg.TickCount = 0
 
 				if s.tcpServer != nil {
 					s.tcpServer.SetState(newState)
@@ -398,6 +399,7 @@ func (s *UDPServer) broadcastTicks() {
 						FleetDestroyed:     baseTickMsg.FleetDestroyed,
 						SystemOwnerChanges: baseTickMsg.SystemOwnerChanges,
 						FleetCreations:     baseTickMsg.FleetCreations,
+						TickCount:          baseTickMsg.TickCount,
 						Victory:            baseTickMsg.Victory,
 					}
 
@@ -423,6 +425,8 @@ func (s *UDPServer) broadcastTicks() {
 
 			s.tickMessage = &pb.TickMsg{}
 			s.state.movedFleets = []int32{}
+			s.state.tickCount++
+			log.Printf("==== TICK COUNT: %d ====", s.state.tickCount)
 
 			s.state.mu.Unlock()
 			s.mu.Unlock()

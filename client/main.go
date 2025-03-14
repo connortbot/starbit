@@ -52,6 +52,8 @@ type model struct {
 	gameLogger *ui.GameLogger
 	logWindow  *ui.ScrollingViewport
 
+	tickCount int32
+
 	// selection coordinates for galaxy nav
 	selectedX int32
 	selectedY int32
@@ -117,6 +119,7 @@ func (m model) View() string {
 		m.galaxy.Systems[selectedSystemIndex],
 		string(m.controlMode),
 		m.gesAmount,
+		m.tickCount,
 	)
 }
 

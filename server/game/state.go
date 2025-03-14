@@ -16,6 +16,9 @@ const (
 
 	initialGES = 1000
 	gesPerTick = 2
+	fleetCost  = 2000
+
+	FLEET_MOVEMENT_COOLDOWN = 10
 )
 
 var MaxPlayers int32 = 4
@@ -41,6 +44,7 @@ type State struct {
 
 	// Map of username -> array of system IDs they own
 	ownedSystems map[string][]int32
+	tickCount    int32
 }
 
 func NewState() *State {
@@ -70,6 +74,7 @@ func NewState() *State {
 		nextFleetID:  1, // start fleet IDs at 1
 		playerGES:    make(map[string]int32),
 		ownedSystems: make(map[string][]int32),
+		tickCount:    0,
 	}
 }
 
@@ -132,7 +137,7 @@ func (g *State) InitializeGame(players map[string]*pb.Player) {
 	g.Started = true
 }
 
-func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) (*pb.SystemOwnerChange, error) {
+func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement, tickCount int32) (*pb.SystemOwnerChange, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -165,6 +170,11 @@ func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) (*pb
 			fleetMovement.FleetId, fleetMovement.FromSystemId)
 	}
 
+	if fleet.LastMovedTick > (tickCount - FLEET_MOVEMENT_COOLDOWN) {
+		ticksToWait := FLEET_MOVEMENT_COOLDOWN - (tickCount - fleet.LastMovedTick)
+		return nil, fmt.Errorf("fleet %d has already moved this tick, wait %d ticks before moving again", fleetMovement.FleetId, ticksToWait)
+	}
+
 	if fleet.Owner != username {
 		return nil, fmt.Errorf("fleet %d is not owned by %s", fleetMovement.FleetId, username)
 	}
@@ -173,6 +183,7 @@ func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement) (*pb
 	sourceSystem.Fleets = append(sourceSystem.Fleets[:fleetIndex], sourceSystem.Fleets[fleetIndex+1:]...)
 	// add to destination system
 	destSystem.Fleets = append(destSystem.Fleets, fleet)
+	fleet.LastMovedTick = tickCount
 	g.movedFleets = append(g.movedFleets, fleetMovement.FleetId)
 
 	if galaxy.ShouldBattleBegin(g.Galaxy, fleetMovement.ToSystemId) {

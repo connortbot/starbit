@@ -114,7 +114,7 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 				m.started = resp.Started
 				m.galaxy = resp.Galaxy
 				m.inspector = ui.NewInspectWindow(ui.InspectorWidth, m.galaxy.Systems[0])
-				m.fleetList = ui.NewFleetListWindow(m.ownedFleets, m.fleetLocations, ui.FleetListWidth, ui.FleetListHeight)
+				m.fleetList = ui.NewFleetListWindow(m.ownedFleets, m.fleetLocations, ui.FleetListWidth, ui.FleetListHeight, m.tickCount)
 				m.controlMode = CommandMode
 
 				m.gameLogger.AddSystemMessage(fmt.Sprintf("%s joined the game", m.username))
@@ -265,12 +265,14 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 			m.galaxy = msg.Galaxy
 			m.ownedFleets, m.fleetLocations = game.FindOwnedFleetsAndLocations(m.galaxy, m.username)
 			if m.fleetList != nil {
-				ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth)
+				ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 			}
 		}
 		return m, nil
 	case *pb.TickMsg:
 		log.Printf("UDP Tick: %s", string(msg.Message))
+		m.tickCount = msg.TickCount
+		ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 		if len(msg.FleetMovements) > 0 {
 			log.Printf("Received %d fleet movements", len(msg.FleetMovements))
 			for _, movement := range msg.FleetMovements {
@@ -282,10 +284,11 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 						movement.FleetId, movement.FromSystemId, movement.ToSystemId)
 					m.gameLogger.AddFleetMovement(movement)
 					fleet := game.GetFleet(m.galaxy, movement.ToSystemId, movement.FleetId)
+					fleet.LastMovedTick = m.tickCount
 					if fleet.Owner == m.username {
 						m.fleetLocations[fleet.Id] = movement.ToSystemId
 						if m.fleetList != nil {
-							ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth)
+							ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 						}
 					}
 				}
@@ -303,7 +306,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 						update.FleetId, update.Health, update.SystemId)
 					m.gameLogger.AddHealthUpdate(update)
 					if m.fleetList != nil {
-						ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth)
+						ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 					}
 				}
 			}
@@ -323,7 +326,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 					delete(m.fleetLocations, destroyed.FleetId)
 					log.Printf("Owned fleets: %v", m.ownedFleets)
 					if m.fleetList != nil {
-						ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth)
+						ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 					}
 				}
 			}
@@ -369,7 +372,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 							m.fleetLocations[fleet.Id] = creation.SystemId
 							log.Printf("Owned fleets: %v", m.ownedFleets)
 							if m.fleetList != nil {
-								ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth)
+								ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 							}
 						}
 					}
@@ -398,6 +401,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 			m.inspector = nil
 			m.fleetList = nil
 			m.fleetLocations = make(map[int32]int32)
+			m.tickCount = 0
 			ui.ResetEnemyColors()
 
 			m.gameLogger.AddSystemMessage("Game has been reset. Enter your name to play again.")

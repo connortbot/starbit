@@ -61,6 +61,7 @@ message Fleet {
   string owner = 2;
   int32 attack = 3;
   int32 health = 4;
+  int32 lastMovedTick = 5;
 }
 
 // UDP TYPES, NOT USED FOR TCP GRPC
@@ -73,6 +74,7 @@ message TickMsg {
   repeated GESUpdate gesUpdates = 6;
   repeated FleetCreation fleetCreations = 7;
   GameVictory victory = 8;
+  int32 tickCount = 9;
 }
 
 message FleetMovement {

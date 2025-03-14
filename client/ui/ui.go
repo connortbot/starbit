@@ -25,7 +25,7 @@ const (
 	InspectorWidth  = PlayerBoxWidth + LogBoxWidth - GalaxyBoxWidth
 
 	CommandLineWidth = InspectorWidth + GalaxyBoxWidth + 1
-	FleetListWidth   = 50
+	FleetListWidth   = 70
 	FleetListHeight  = LogBoxHeight + InspectorHeight + 3 + 2
 )
 
@@ -156,6 +156,7 @@ func RenderGameScreen(
 	selectedSystem *pb.System,
 	controlMode string,
 	gesAmount int32,
+	currentTickCount int32,
 ) string {
 	var s strings.Builder
 
@@ -193,7 +194,7 @@ func RenderGameScreen(
 			gameplayViewportContent,
 			RenderCommandLine(command, boxedCommandStyle)+"\n",
 			RenderHelpFooter()) + "\n"
-		leftContent := listBoxes(0, infoSection, gameContent, fmt.Sprintf("   Mode: %s    GES: %d", controlMode, gesAmount))
+		leftContent := listBoxes(0, infoSection, gameContent, fmt.Sprintf("   Mode: %s    GES: %d    Sol: %d", controlMode, gesAmount, currentTickCount))
 		s.WriteString(
 			sideBySideBoxes(1,
 				leftContent,
