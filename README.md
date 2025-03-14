@@ -108,6 +108,7 @@ Fleets:
 - Cost: 500 GES -> 2000 GES
 
 Misc Updates:
+: Win Condition: `(galaxyHeight) * galaxyWidth)` -> `(galaxyHeight - 1) * galaxyWidth)`
 - GES/sol: 1 -> 0
 - GES/system: 0 -> 1
 - Added a list showing your fleets on the right side, including current locations for easy `fm` commands!
@@ -118,9 +119,6 @@ Bug Fixes:
 - Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
 
 #### Future Updates
-- Entering a system requires 10 ticks to gain ownership
-- To win, you now only need to own `(galaxyHeight - 1) * galaxyWidth)` systems
-
 - Add Ex(plosive) Attack, Evasion, and Armor.
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.

@@ -329,9 +329,9 @@ func (s *UDPServer) broadcastTicks() {
 
 			// check for win conditions
 			var victor string
-			totalSystems := s.state.Galaxy.Width * s.state.Galaxy.Height
+			winCondition := s.state.Galaxy.Width * (s.state.Galaxy.Height - 1)
 			for player, systems := range s.state.ownedSystems {
-				if int32(len(systems)) == totalSystems {
+				if int32(len(systems)) == winCondition {
 					victor = player
 					break
 				}
