@@ -104,6 +104,7 @@ You'll need:
 #### `v0.02` Patch Notes
 
 Misc Updates:
+- Added a list showing your fleets on the right side, including current locations for easy `fm` commands!
 - Added a first screen to notify players to make their terminal window large enough! Unfortunately, we can't set it via code.
 
 Bug Fixes:
@@ -114,7 +115,6 @@ Bug Fixes:
 - Entering a system requires 10 ticks to gain ownership
 - There is no base GES/tick. Each owned system grants 1 GES/tick.
 - To win, you now only need to own `(galaxyHeight - 1) * galaxyWidth)` systems
-- Add a list of your fleets on the right side of the UI with IDs and stats
 
 - Add Ex(plosive) Attack, Evasion, and Armor.
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
