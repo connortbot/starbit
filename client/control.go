@@ -162,6 +162,8 @@ func (m model) HandleMenu(msg tea.Msg) (model, tea.Cmd) {
 		if msg.Galaxy != nil {
 			m.galaxy = msg.Galaxy
 			m.ownedFleets, m.fleetLocations = game.FindOwnedFleetsAndLocations(m.galaxy, m.username)
+			ui.ResetEnemyColors()
+			ui.InitializeEnemyColors(m.galaxy, m.username)
 		}
 		if msg.Started {
 			m.gameLogger.AddSystemMessage("Game started")
