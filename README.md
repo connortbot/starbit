@@ -62,7 +62,8 @@ You'll need:
    # Create a directory for the server
    mkdir -p ~/starbit
 
-   echo "net.core.rmem_max=8388608 net.core.wmem_max=8388608" | sudo tee -a /etc/sysctl.conf
+   echo "net.core.rmem_max=8388608
+   net.core.wmem_max=8388608" | sudo tee -a /etc/sysctl.conf
    sudo sysctl -p
    
    # Download the executable directly to the server
