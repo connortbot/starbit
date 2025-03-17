@@ -124,6 +124,7 @@ Bug Fixes:
 - Fixed bug where first few players to join don't colour in systems correctly for enemies.
 
 #### Future Updates
+- Automatically grant a player the win when they are the only remaining one with owned systems.
 - Add Ex(plosive) Attack, Evasion, and Armor.
 - Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
