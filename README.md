@@ -123,8 +123,10 @@ Bug Fixes:
 - Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
 - Fixed bug where first few players to join don't colour in systems correctly for enemies.
 
-**Update v0.02.01**
-Change `fm x y z` to just `fm <id> <destination>` since we already track owned fleets with the window. e
+**Patch v0.02.01**
+- Change `fm x y z` to just `fm <id> <destination>` since we already track owned fleets with the window. e
+
+
 
 #### Future Updates
 - Automatically grant a player the win when they are the only remaining one with owned systems.
