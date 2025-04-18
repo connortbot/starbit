@@ -243,7 +243,10 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 		case "enter":
 			if m.controlMode == CommandMode && m.command != "" {
 				log.Printf("Processing command: %s", m.command)
-				result := game.ParseCommand(m.udpClient, m.command)
+				data := game.CommandData{
+					FleetLocations: m.fleetLocations,
+				}
+				result := game.ParseCommand(m.udpClient, m.command, data)
 				if result.Success {
 					log.Printf("Command successful: %s", result.Message)
 					m.gameLogger.AddCommand(m.username, m.command, true)
@@ -252,6 +255,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				} else {
 					log.Printf("Command failed: %s", result.Message)
 					m.gameLogger.AddCommand(m.username, m.command, false)
+					m.gameLogger.AddSystemMessage(result.Message)
 					ui.UpdateLogWindow(m.logWindow, m.gameLogger)
 				}
 			}
