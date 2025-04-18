@@ -13,7 +13,12 @@ type CommandResult struct {
 	Message string
 }
 
-func ParseCommand(client *UDPClient, input string) CommandResult {
+// data needed for parsing all commands
+type CommandData struct {
+	FleetLocations map[int32]int32
+}
+
+func ParseCommand(client *UDPClient, input string, data CommandData) CommandResult {
 	input = strings.TrimSpace(input)
 	parts := strings.Fields(input)
 
@@ -28,7 +33,7 @@ func ParseCommand(client *UDPClient, input string) CommandResult {
 
 	switch cmdType {
 	case "fm":
-		return handleFleetMovement(client, parts)
+		return handleFleetMovement(client, parts, &data)
 	case "fc":
 		return handleFleetCreation(client, parts)
 	default:
@@ -74,12 +79,12 @@ func handleFleetCreation(client *UDPClient, parts []string) CommandResult {
 	}
 }
 
-// Format: fm <fleet_id> <from_system_id> <to_system_id>
-func handleFleetMovement(client *UDPClient, parts []string) CommandResult {
-	if len(parts) != 4 {
+// Format: fm <fleet_id> <to_system_id>
+func handleFleetMovement(client *UDPClient, parts []string, data *CommandData) CommandResult {
+	if len(parts) != 3 {
 		return CommandResult{
 			Success: false,
-			Message: "Invalid fleet movement command. Format: fm <fleet_id> <from_system_id> <to_system_id>",
+			Message: "Invalid fleet movement command. Format: fm <fleet_id> <to_system_id>",
 		}
 	}
 
@@ -91,15 +96,7 @@ func handleFleetMovement(client *UDPClient, parts []string) CommandResult {
 		}
 	}
 
-	fromSystemID, err := strconv.ParseInt(parts[2], 10, 32)
-	if err != nil {
-		return CommandResult{
-			Success: false,
-			Message: fmt.Sprintf("Invalid source system ID: %s", parts[2]),
-		}
-	}
-
-	toSystemID, err := strconv.ParseInt(parts[3], 10, 32)
+	toSystemID, err := strconv.ParseInt(parts[2], 10, 32)
 	if err != nil {
 		return CommandResult{
 			Success: false,
@@ -107,6 +104,7 @@ func handleFleetMovement(client *UDPClient, parts []string) CommandResult {
 		}
 	}
 
+	fromSystemID := data.FleetLocations[int32(fleetID)]
 	movement := &pb.FleetMovement{
 		FleetId:      int32(fleetID),
 		FromSystemId: int32(fromSystemID),

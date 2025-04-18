@@ -33,7 +33,7 @@ Players earn 1 GES (General Energy Substance) per system owned. GES is used to c
 - **Inspector**: Press `Shift+I` to open the inspector panel, and use arrow keys to scroll up and down.
 - **Commands**: Press `Shift+C` to access the command line, where you can enter:
   - `fc <system>` - Create a new Fleet in the specified system
-  - `fm <fleet id> <from system id> <to system id>` - Move a Fleet from one system to another
+  - `fm <fleet id> <to system id>` - Move a Fleet from one system to another
 - **Fleets**: Press `Shift+F` to select the fleets list, and arrow keys to scroll up and down.
 
 ## Deployment
@@ -123,6 +123,9 @@ Bug Fixes:
 - Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
 - Fixed bug where first few players to join don't colour in systems correctly for enemies.
 
+**Update v0.02.01**
+Change `fm x y z` to just `fm <id> <destination>` since we already track owned fleets with the window. e
+
 #### Future Updates
 - Automatically grant a player the win when they are the only remaining one with owned systems.
 - Add Ex(plosive) Attack, Evasion, and Armor.
@@ -130,7 +133,6 @@ Bug Fixes:
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
 - Restrict movement in the grid? (e.g choke points)
-- Change `fm x y z` to just `fm <id> <destination>` since we already track owned fleets, we don't need to provide location in the command.
 - `sel <system_id>` which selects a group of fleets
 - `spl <t/b>` which selects `(t)top` half or `(b)bottom` half of current selection
 - `sm <system_id>` which moves selections to the system.
