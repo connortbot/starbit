@@ -132,12 +132,11 @@ message FleetCreation {
   int32 fleetId = 3;
   int32 attack = 4;
   int32 health = 5;
-  int32 maxHealth = 6;
-  int32 evasion = 7;
-  int32 armor = 8;
-  int32 exattack = 9;
+  int32 evasion = 6;
+  int32 armor = 7;
+  int32 exattack = 8;
   
-  FleetComposition composition = 10;
+  FleetComposition composition = 9;
 }
 
 message GameVictory {

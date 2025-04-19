@@ -94,12 +94,15 @@ func ProcessFleetDestroyed(galaxy *pb.GalaxyState, fleetDestroyed *pb.FleetDestr
 	return fmt.Errorf("fleet ID %d not found in system ID %d", fleetDestroyed.FleetId, fleetDestroyed.SystemId)
 }
 
-func NewFleet(fleetId int32, owner string, attack int32, health int32) *pb.Fleet {
+func NewFleet(fleetId int32, owner string, attack int32, exattack int32, health int32, evasion int32, armor int32, composition *pb.FleetComposition) *pb.Fleet {
 	return &pb.Fleet{
 		Id:     fleetId,
 		Owner:  owner,
 		Attack: attack,
+		Exattack: exattack,
 		Health: health,
+		MaxHealth: health,
+		Composition: composition,
 	}
 }
 
@@ -124,7 +127,13 @@ func ProcessFleetCreation(galaxy *pb.GalaxyState, fleetCreation *pb.FleetCreatio
 			fleetCreation.FleetId,
 			fleetCreation.Owner,
 			fleetCreation.Attack,
+			fleetCreation.Exattack,
 			fleetCreation.Health,
+			fleetCreation.Evasion,
+			fleetCreation.Armor,
+			&pb.FleetComposition{
+				Destroyers: 1,
+			},
 		),
 	)
 	return nil

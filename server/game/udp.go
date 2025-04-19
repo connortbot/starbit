@@ -202,8 +202,8 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 
 				newFleetId := s.state.nextFleetID
 				s.state.nextFleetID++
-
-				newFleet := fleets.NewFleet(newFleetId, msg.Username, galaxy.StartingFleetAttack, galaxy.StartingFleetHealth)
+				
+				newFleet := fleets.NewFleet(newFleetId, msg.Username, fleets.StartingFleetAttack, fleets.StartingFleetExAttack, fleets.StartingFleetHealth, fleets.StartingFleetEvasion, fleets.StartingFleetArmor, &pb.FleetComposition{ Destroyers: 1 })
 				galaxy.AddFleetToSystem(s.state.Galaxy, systemId, newFleet)
 
 				newGES := s.state.AdjustPlayerGES(msg.Username, -fleetCost)
@@ -211,8 +211,12 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 				fleetCreation := msg.TickMsg.FleetCreations[0]
 				fleetCreation.FleetId = newFleetId
 				fleetCreation.Owner = msg.Username
-				fleetCreation.Attack = galaxy.StartingFleetAttack
-				fleetCreation.Health = galaxy.StartingFleetHealth
+				fleetCreation.Attack = fleets.StartingFleetAttack
+				fleetCreation.Health = fleets.StartingFleetHealth
+				fleetCreation.Exattack = fleets.StartingFleetExAttack
+				fleetCreation.Evasion = fleets.StartingFleetEvasion
+				fleetCreation.Armor = fleets.StartingFleetArmor
+				fleetCreation.Composition = &pb.FleetComposition{ Destroyers: 1 }
 				s.tickMessage.FleetCreations = append(s.tickMessage.FleetCreations, fleetCreation)
 
 				s.tickMessage.GesUpdates = append(s.tickMessage.GesUpdates, &pb.GESUpdate{
