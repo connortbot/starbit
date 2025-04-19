@@ -527,12 +527,13 @@ type Fleet struct {
 	Owner         string                 `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
 	Attack        int32                  `protobuf:"varint,3,opt,name=attack,proto3" json:"attack,omitempty"`
 	Health        int32                  `protobuf:"varint,4,opt,name=health,proto3" json:"health,omitempty"`
-	LastMovedTick int32                  `protobuf:"varint,5,opt,name=lastMovedTick,proto3" json:"lastMovedTick,omitempty"`
-	Evasion       int32                  `protobuf:"varint,6,opt,name=evasion,proto3" json:"evasion,omitempty"` // out of 100
-	Armor         int32                  `protobuf:"varint,7,opt,name=armor,proto3" json:"armor,omitempty"`     // out of 100
-	Exattack      int32                  `protobuf:"varint,8,opt,name=exattack,proto3" json:"exattack,omitempty"`
+	MaxHealth     int32                  `protobuf:"varint,5,opt,name=maxHealth,proto3" json:"maxHealth,omitempty"`
+	LastMovedTick int32                  `protobuf:"varint,6,opt,name=lastMovedTick,proto3" json:"lastMovedTick,omitempty"`
+	Evasion       int32                  `protobuf:"varint,7,opt,name=evasion,proto3" json:"evasion,omitempty"` // out of 100
+	Armor         int32                  `protobuf:"varint,8,opt,name=armor,proto3" json:"armor,omitempty"`     // out of 100
+	Exattack      int32                  `protobuf:"varint,9,opt,name=exattack,proto3" json:"exattack,omitempty"`
 	// ship counts
-	Composition   *FleetComposition `protobuf:"bytes,9,opt,name=composition,proto3" json:"composition,omitempty"`
+	Composition   *FleetComposition `protobuf:"bytes,10,opt,name=composition,proto3" json:"composition,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -591,6 +592,13 @@ func (x *Fleet) GetAttack() int32 {
 func (x *Fleet) GetHealth() int32 {
 	if x != nil {
 		return x.Health
+	}
+	return 0
+}
+
+func (x *Fleet) GetMaxHealth() int32 {
+	if x != nil {
+		return x.MaxHealth
 	}
 	return 0
 }
@@ -1158,10 +1166,11 @@ type FleetCreation struct {
 	FleetId       int32                  `protobuf:"varint,3,opt,name=fleetId,proto3" json:"fleetId,omitempty"`
 	Attack        int32                  `protobuf:"varint,4,opt,name=attack,proto3" json:"attack,omitempty"`
 	Health        int32                  `protobuf:"varint,5,opt,name=health,proto3" json:"health,omitempty"`
-	Evasion       int32                  `protobuf:"varint,6,opt,name=evasion,proto3" json:"evasion,omitempty"`
-	Armor         int32                  `protobuf:"varint,7,opt,name=armor,proto3" json:"armor,omitempty"`
-	Exattack      int32                  `protobuf:"varint,8,opt,name=exattack,proto3" json:"exattack,omitempty"`
-	Composition   *FleetComposition      `protobuf:"bytes,9,opt,name=composition,proto3" json:"composition,omitempty"`
+	MaxHealth     int32                  `protobuf:"varint,6,opt,name=maxHealth,proto3" json:"maxHealth,omitempty"`
+	Evasion       int32                  `protobuf:"varint,7,opt,name=evasion,proto3" json:"evasion,omitempty"`
+	Armor         int32                  `protobuf:"varint,8,opt,name=armor,proto3" json:"armor,omitempty"`
+	Exattack      int32                  `protobuf:"varint,9,opt,name=exattack,proto3" json:"exattack,omitempty"`
+	Composition   *FleetComposition      `protobuf:"bytes,10,opt,name=composition,proto3" json:"composition,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1227,6 +1236,13 @@ func (x *FleetCreation) GetAttack() int32 {
 func (x *FleetCreation) GetHealth() int32 {
 	if x != nil {
 		return x.Health
+	}
+	return 0
+}
+
+func (x *FleetCreation) GetMaxHealth() int32 {
+	if x != nil {
+		return x.MaxHealth
 	}
 	return 0
 }
@@ -1348,17 +1364,19 @@ const file_proto_service_proto_rawDesc = "" +
 	"\x06galaxy\x18\x04 \x01(\v2\x12.proto.GalaxyStateR\x06galaxy\x1aI\n" +
 	"\fPlayersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12#\n" +
-	"\x05value\x18\x02 \x01(\v2\r.proto.PlayerR\x05value:\x028\x01\"\x8a\x02\n" +
+	"\x05value\x18\x02 \x01(\v2\r.proto.PlayerR\x05value:\x028\x01\"\xa8\x02\n" +
 	"\x05Fleet\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x14\n" +
 	"\x05owner\x18\x02 \x01(\tR\x05owner\x12\x16\n" +
 	"\x06attack\x18\x03 \x01(\x05R\x06attack\x12\x16\n" +
-	"\x06health\x18\x04 \x01(\x05R\x06health\x12$\n" +
-	"\rlastMovedTick\x18\x05 \x01(\x05R\rlastMovedTick\x12\x18\n" +
-	"\aevasion\x18\x06 \x01(\x05R\aevasion\x12\x14\n" +
-	"\x05armor\x18\a \x01(\x05R\x05armor\x12\x1a\n" +
-	"\bexattack\x18\b \x01(\x05R\bexattack\x129\n" +
-	"\vcomposition\x18\t \x01(\v2\x17.proto.FleetCompositionR\vcomposition\"\x94\x01\n" +
+	"\x06health\x18\x04 \x01(\x05R\x06health\x12\x1c\n" +
+	"\tmaxHealth\x18\x05 \x01(\x05R\tmaxHealth\x12$\n" +
+	"\rlastMovedTick\x18\x06 \x01(\x05R\rlastMovedTick\x12\x18\n" +
+	"\aevasion\x18\a \x01(\x05R\aevasion\x12\x14\n" +
+	"\x05armor\x18\b \x01(\x05R\x05armor\x12\x1a\n" +
+	"\bexattack\x18\t \x01(\x05R\bexattack\x129\n" +
+	"\vcomposition\x18\n" +
+	" \x01(\v2\x17.proto.FleetCompositionR\vcomposition\"\x94\x01\n" +
 	"\x10FleetComposition\x12\x1e\n" +
 	"\n" +
 	"destroyers\x18\x01 \x01(\x05R\n" +
@@ -1402,17 +1420,19 @@ const file_proto_service_proto_rawDesc = "" +
 	"\tGESUpdate\x12\x14\n" +
 	"\x05owner\x18\x01 \x01(\tR\x05owner\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\x05R\x06amount\x12\x12\n" +
-	"\x04rate\x18\x03 \x01(\x05R\x04rate\"\x92\x02\n" +
+	"\x04rate\x18\x03 \x01(\x05R\x04rate\"\xb0\x02\n" +
 	"\rFleetCreation\x12\x1a\n" +
 	"\bsystemId\x18\x01 \x01(\x05R\bsystemId\x12\x14\n" +
 	"\x05owner\x18\x02 \x01(\tR\x05owner\x12\x18\n" +
 	"\afleetId\x18\x03 \x01(\x05R\afleetId\x12\x16\n" +
 	"\x06attack\x18\x04 \x01(\x05R\x06attack\x12\x16\n" +
-	"\x06health\x18\x05 \x01(\x05R\x06health\x12\x18\n" +
-	"\aevasion\x18\x06 \x01(\x05R\aevasion\x12\x14\n" +
-	"\x05armor\x18\a \x01(\x05R\x05armor\x12\x1a\n" +
-	"\bexattack\x18\b \x01(\x05R\bexattack\x129\n" +
-	"\vcomposition\x18\t \x01(\v2\x17.proto.FleetCompositionR\vcomposition\"%\n" +
+	"\x06health\x18\x05 \x01(\x05R\x06health\x12\x1c\n" +
+	"\tmaxHealth\x18\x06 \x01(\x05R\tmaxHealth\x12\x18\n" +
+	"\aevasion\x18\a \x01(\x05R\aevasion\x12\x14\n" +
+	"\x05armor\x18\b \x01(\x05R\x05armor\x12\x1a\n" +
+	"\bexattack\x18\t \x01(\x05R\bexattack\x129\n" +
+	"\vcomposition\x18\n" +
+	" \x01(\v2\x17.proto.FleetCompositionR\vcomposition\"%\n" +
 	"\vGameVictory\x12\x16\n" +
 	"\x06winner\x18\x01 \x01(\tR\x06winner2\x84\x01\n" +
 	"\x04Game\x125\n" +
