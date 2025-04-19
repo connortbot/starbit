@@ -144,6 +144,7 @@ The new `fu` command can be used to add ships to a fleet.
 - `sel <system_id>` which selects a group of fleets
 - `spl <t/b>` which selects `(t)top` half or `(b)bottom` half of current selection
 - `sm <system_id>` which moves selections to the system.
+- Check client and server versions when joining a server. (Reject connections with an error message)
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request.
