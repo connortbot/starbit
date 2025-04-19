@@ -20,13 +20,24 @@ A game takes place across multiple `sols`, a unit of time. Think of it like a ti
 Players begin with a starting System and a *Fleet*.
 
 **GES**:
-Players earn 1 GES (General Energy Substance) per system owned. GES is used to create new Fleets, which cost 2000 GES each.
+Players earn 1 GES (General Energy Substance) per system owned. GES is used to create new Fleets and Ships.
 
-**Fleets**: All Fleets start with 100 health and 1 attack.
+**Fleets**: Composed of several Ships. A starting Fleet begins with 1 Destroyer.
 - Can only be created in Systems you control.
 - Combat resolves automatically when Fleets from different players occupy the same system.
-- During combat, each ship randomly selects an enemy to attack and deals damage each sol.
+- During combat, each Fleet randomly selects an enemy to attack and deals damage each sol.
 - A player wins by eliminating all opposing Fleets and controlling all systems.
+- Stats are defined as an average of all the Ships.
+- Construct new Ships in Fleets to modify stats.
+
+| Ship | Cost | Health | Attack | Ex Attack | Evasion | Armor |
+|-|-|-|-|-|-|-|
+| Destroyer | 250 GES | 50 | 2 | 1 | 35% | 5% |
+| Cruiser |  350 GES | 75 | 1 | 2 | 20% | 15% |
+| Battleship | 800 GES | 200 | 5 | 2 | 10% | 30% |
+| Dreadnought | 1500 GES | 600 | 3 | 5 | 5% | 40% |
+
+The creation of a fleet costs 3000 base GES.
 
 ### Controls
 - **Navigation**: Press `Shift+E` and use arrow keys to move around the galaxy.
@@ -34,6 +45,7 @@ Players earn 1 GES (General Energy Substance) per system owned. GES is used to c
 - **Commands**: Press `Shift+C` to access the command line, where you can enter:
   - `fc <system>` - Create a new Fleet in the specified system
   - `fm <fleet id> <to system id>` - Move a Fleet from one system to another
+  - `fu <fleet_id> <de|cr|ba|dr>` - Builds a ship and adds it to a fleet
 - **Fleets**: Press `Shift+F` to select the fleets list, and arrow keys to scroll up and down.
 
 ## Deployment
@@ -106,32 +118,26 @@ You'll need:
 
 ## Roadmap
 
-#### `v0.02` Patch Notes
-Fleets:
-- Movement Cooldown: 0 Sols -> 10 sols
-- Cost: 500 GES -> 2000 GES
+#### `v0.03`: Combat Update
+Revamps the combat system so that each fleet is comprised of multiple Ships.
 
-Misc Updates:
-- Win Condition: `(galaxyHeight) * galaxyWidth)` -> `(galaxyHeight - 1) * galaxyWidth)`
-- GES/sol: 1 -> 0
-- GES/system: 0 -> 1
-- Added a list showing your fleets on the right side, including current locations for easy `fm` commands!
-- Added a first screen to notify players to make their terminal window large enough! Unfortunately, we can't set it via code.
+Adds stats *Evasion* and *Armor* to fleets.
+- *Armor* reduces the damage received by a percentage.
+- *Evasion* is a percentage chance that the damage received is dodged entirely.
 
-Bug Fixes:
-- Fixed bug where Inspector window would get too long because of the content of a previously long System info. Window now scrolls to top when switching Systems.
-- Fixed bug where earlier joined players lobby list would not show players who joined until the game already started.
-- Fixed bug where first few players to join don't colour in systems correctly for enemies.
+Adds 4 types of ships: Destroyer, Cruiser, Battleship, Dreadnought.
 
-**Patch v0.02.01**
-- Change `fm x y z` to just `fm <id> <destination>` since we already track owned fleets with the window. e
+| Ship | Cost | Health | Attack | Ex Attack | Evasion | Armor |
+|-|-|-|-|-|-|-|
+| Destroyer | 250 GES | 50 | 2 | 1 | 35% | 5% |
+| Cruiser |  350 GES | 75 | 1 | 2 | 20% | 15% |
+| Battleship | 800 GES | 200 | 5 | 2 | 10% | 30% |
+| Dreadnought | 1500 GES | 600 | 3 | 5 | 5% | 40% |
 
-
+The new `fu` command can be used to add ships to a fleet.
 
 #### Future Updates
 - Automatically grant a player the win when they are the only remaining one with owned systems.
-- Add Ex(plosive) Attack, Evasion, and Armor.
-- Ships (Destroyer, Cruiser, Battleship, Dreadnought) and Fleet composition of Ships.
 - Build Supply System, requiring *Convoys* scaling with GES/tick consumption, and supply penalties.
 - Combat Bonuses (outnumbering, ownership of system, etc.)
 - Restrict movement in the grid? (e.g choke points)

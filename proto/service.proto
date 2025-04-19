@@ -62,6 +62,20 @@ message Fleet {
   int32 attack = 3;
   int32 health = 4;
   int32 lastMovedTick = 5;
+  
+  int32 evasion = 6; // out of 100
+  int32 armor = 7; // out of 100
+  int32 exattack = 8;
+  
+  // ship counts
+  FleetComposition composition = 9;
+}
+
+message FleetComposition {
+  int32 destroyers = 1;
+  int32 cruisers = 2;
+  int32 battleships = 3;
+  int32 dreadnoughts = 4;
 }
 
 // UDP TYPES, NOT USED FOR TCP GRPC
@@ -73,8 +87,14 @@ message TickMsg {
   repeated SystemOwnerChange systemOwnerChanges = 5;
   repeated GESUpdate gesUpdates = 6;
   repeated FleetCreation fleetCreations = 7;
-  GameVictory victory = 8;
-  int32 tickCount = 9;
+  repeated FleetModification fleetModifications = 8;
+  GameVictory victory = 9;
+  int32 tickCount = 10;
+}
+
+message FleetModification {
+  int32 fleetId = 1;
+  FleetComposition composition = 2;
 }
 
 message FleetMovement {
@@ -111,6 +131,11 @@ message FleetCreation {
   int32 fleetId = 3;
   int32 attack = 4;
   int32 health = 5;
+  int32 evasion = 6;
+  int32 armor = 7;
+  int32 exattack = 8;
+  
+  FleetComposition composition = 9;
 }
 
 message GameVictory {
