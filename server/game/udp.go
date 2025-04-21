@@ -157,6 +157,32 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 					s.mu.Unlock()
 				}
 			}
+		case "fleet_modification":
+			if msg.TickMsg != nil && len(msg.TickMsg.FleetModifications) > 0 {
+				s.mu.Lock()
+				currentGES := s.state.GetPlayerGES(msg.Username)
+				modificationCost, fleetUpdate, err := s.state.ModifyFleet(msg.Username, msg.TickMsg.FleetModifications[0], s.state.tickCount, currentGES)
+				if err != nil {
+					s.mu.Unlock()
+					errorMsg := ServerMessage{
+						Type: "error",
+						Content: err.Error(),
+						Username: msg.Username,
+					}
+					jsonError, _ := json.Marshal(errorMsg)
+					stream.Write(jsonError)
+				} else {
+					s.tickMessage.FleetUpdates = append(s.tickMessage.FleetUpdates, fleetUpdate)
+					newGES := s.state.AdjustPlayerGES(msg.Username, -modificationCost)
+					s.tickMessage.GesUpdates = append(s.tickMessage.GesUpdates, &pb.GESUpdate{
+						Owner:  msg.Username,
+						Amount: newGES,
+					})
+
+					s.mu.Unlock()
+				}
+			}	
+
 		case "fleet_creation":
 			if msg.TickMsg != nil && len(msg.TickMsg.FleetCreations) > 0 {
 				s.mu.Lock()
@@ -202,8 +228,8 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 
 				newFleetId := s.state.nextFleetID
 				s.state.nextFleetID++
-
-				newFleet := fleets.NewFleet(newFleetId, msg.Username, galaxy.StartingFleetAttack, galaxy.StartingFleetHealth)
+				
+				newFleet := fleets.NewFleet(newFleetId, msg.Username, fleets.StartingFleetAttack, fleets.StartingFleetExAttack, fleets.StartingFleetHealth, fleets.StartingFleetEvasion, fleets.StartingFleetArmor, &pb.FleetComposition{ Destroyers: 1 })
 				galaxy.AddFleetToSystem(s.state.Galaxy, systemId, newFleet)
 
 				newGES := s.state.AdjustPlayerGES(msg.Username, -fleetCost)
@@ -211,8 +237,12 @@ func (s *UDPServer) handleStream(conn quic.Connection, stream quic.Stream) {
 				fleetCreation := msg.TickMsg.FleetCreations[0]
 				fleetCreation.FleetId = newFleetId
 				fleetCreation.Owner = msg.Username
-				fleetCreation.Attack = galaxy.StartingFleetAttack
-				fleetCreation.Health = galaxy.StartingFleetHealth
+				fleetCreation.Attack = fleets.StartingFleetAttack
+				fleetCreation.Health = fleets.StartingFleetHealth
+				fleetCreation.Exattack = fleets.StartingFleetExAttack
+				fleetCreation.Evasion = fleets.StartingFleetEvasion
+				fleetCreation.Armor = fleets.StartingFleetArmor
+				fleetCreation.Composition = &pb.FleetComposition{ Destroyers: 1 }
 				s.tickMessage.FleetCreations = append(s.tickMessage.FleetCreations, fleetCreation)
 
 				s.tickMessage.GesUpdates = append(s.tickMessage.GesUpdates, &pb.GESUpdate{
@@ -345,6 +375,7 @@ func (s *UDPServer) broadcastTicks() {
 				FleetDestroyed:     s.tickMessage.FleetDestroyed,
 				SystemOwnerChanges: s.tickMessage.SystemOwnerChanges,
 				FleetCreations:     s.tickMessage.FleetCreations,
+				FleetUpdates:       s.tickMessage.FleetUpdates,
 				TickCount:          s.state.tickCount,
 			}
 
@@ -399,6 +430,7 @@ func (s *UDPServer) broadcastTicks() {
 						FleetDestroyed:     baseTickMsg.FleetDestroyed,
 						SystemOwnerChanges: baseTickMsg.SystemOwnerChanges,
 						FleetCreations:     baseTickMsg.FleetCreations,
+						FleetUpdates:       baseTickMsg.FleetUpdates,			
 						TickCount:          baseTickMsg.TickCount,
 						Victory:            baseTickMsg.Victory,
 					}

@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	pb "starbit/proto"
-
+	fleets "starbit/server/game/fleets"
 	galaxy "starbit/server/game/galaxy"
 )
 
@@ -136,6 +136,75 @@ func (g *State) InitializeGame(players map[string]*pb.Player) {
 	}
 
 	g.Started = true
+}
+
+func (g *State) ModifyFleet(username string, fleetModification *pb.FleetModification, tickCount int32, currentGES int32) (int32, *pb.FleetUpdate, error) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	if fleetModification == nil {
+		return 0, nil, fmt.Errorf("fleet modification cannot be nil")
+	}
+
+	if fleetModification.Composition == nil {
+		return 0, nil, fmt.Errorf("fleet composition cannot be nil")
+	}
+
+	if slices.Contains(g.movedFleets, fleetModification.FleetId) || slices.Contains(g.battlingSystems, fleetModification.SystemId) {
+		return 0, nil, fmt.Errorf("fleet %d has been moved or is battling", fleetModification.FleetId)
+	}
+	if fleetModification.SystemId < 0 || fleetModification.SystemId >= int32(len(g.Galaxy.Systems)) {
+		return 0, nil, fmt.Errorf("source system with ID %d not found", fleetModification.FleetId)
+	}
+
+	sourceSystem := g.Galaxy.Systems[fleetModification.SystemId]
+	var fleet *pb.Fleet
+	var fleetIndex int
+	for i, f := range sourceSystem.Fleets {
+		if f.Id == fleetModification.FleetId {
+			fleet = f
+			fleetIndex = i
+			break
+		}
+	}
+
+	if fleet == nil {
+		return 0, nil, fmt.Errorf("fleet ID %d not found in system ID %d", fleetModification.FleetId, fleetModification.SystemId)
+	}
+
+	
+	if fleet.Owner != username {
+		return 0, nil, fmt.Errorf("fleet %d is not owned by %s", fleetModification.FleetId, username)
+	}
+
+	modificationCost := int32(0)
+	modificationCost += int32(fleets.DestroyerCost) * (fleetModification.Composition.Destroyers - fleet.Composition.Destroyers)	
+	modificationCost += int32(fleets.CruiserCost) * (fleetModification.Composition.Cruisers - fleet.Composition.Cruisers)
+	modificationCost += int32(fleets.BattleshipCost) * (fleetModification.Composition.Battleships - fleet.Composition.Battleships)
+	modificationCost += int32(fleets.DreadnoughtCost) * (fleetModification.Composition.Dreadnoughts - fleet.Composition.Dreadnoughts)
+
+	if currentGES < modificationCost {
+		fmt.Printf("Current Composition: %v\n", fleet.Composition)
+		fmt.Printf("Modification Composition: %v\n", fleetModification.Composition)
+		return 0, nil, fmt.Errorf("Not enough GES. Required: %d, Available: %d", modificationCost, currentGES)
+	}
+
+	fleets.CalculateAndUpdateFleet(fleet, fleetModification)
+	fleetUpdate := &pb.FleetUpdate{
+		FleetId: fleetModification.FleetId,
+		SystemId: fleetModification.SystemId,
+		MaxHealth: fleet.MaxHealth,
+		Health: fleet.Health,
+		Attack: fleet.Attack,
+		Exattack: fleet.Exattack,
+		Evasion: fleet.Evasion,
+		Armor: fleet.Armor,
+		Owner: fleet.Owner,
+		Composition: fleetModification.Composition,
+	}
+	g.Galaxy.Systems[fleetModification.SystemId].Fleets[fleetIndex] = fleet
+
+	return modificationCost, fleetUpdate, nil	
 }
 
 func (g *State) MoveFleet(username string, fleetMovement *pb.FleetMovement, tickCount int32) (*pb.SystemOwnerChange, error) {

@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"log"
 	pb "starbit/proto"
 )
 
@@ -94,12 +95,17 @@ func ProcessFleetDestroyed(galaxy *pb.GalaxyState, fleetDestroyed *pb.FleetDestr
 	return fmt.Errorf("fleet ID %d not found in system ID %d", fleetDestroyed.FleetId, fleetDestroyed.SystemId)
 }
 
-func NewFleet(fleetId int32, owner string, attack int32, health int32) *pb.Fleet {
+func NewFleet(fleetId int32, owner string, attack int32, exattack int32, health int32, evasion int32, armor int32, composition *pb.FleetComposition) *pb.Fleet {
 	return &pb.Fleet{
 		Id:     fleetId,
 		Owner:  owner,
 		Attack: attack,
+		Exattack: exattack,
 		Health: health,
+		MaxHealth: health,
+		Evasion: evasion,
+		Armor: armor,
+		Composition: composition,
 	}
 }
 
@@ -112,21 +118,50 @@ func AddFleetToSystem(galaxy *pb.GalaxyState, systemId int32, fleet *pb.Fleet) e
 }
 
 
+
+
+func ProcessFleetUpdate(galaxy *pb.GalaxyState, fleetUpdate *pb.FleetUpdate) error {
+	
+	if fleetUpdate.SystemId < 0 || fleetUpdate.SystemId >= int32(len(galaxy.Systems)) {
+		return fmt.Errorf("system with ID %d not found", fleetUpdate.SystemId)
+	}
+	
+	fleet := GetFleet(galaxy, fleetUpdate.SystemId, fleetUpdate.FleetId)
+	fleet.Health = fleetUpdate.Health
+	fleet.MaxHealth = fleetUpdate.MaxHealth
+	fleet.Attack = fleetUpdate.Attack
+	fleet.Exattack = fleetUpdate.Exattack
+	fleet.Evasion = fleetUpdate.Evasion
+	fleet.Armor = fleetUpdate.Armor
+	log.Printf("Fleet Update and Composition: %v %v", fleetUpdate, fleetUpdate.Composition)
+	fleet.Composition = fleetUpdate.Composition
+
+	return nil
+} 
+
+
 func ProcessFleetCreation(galaxy *pb.GalaxyState, fleetCreation *pb.FleetCreation) error {
 	if fleetCreation.SystemId < 0 || fleetCreation.SystemId >= int32(len(galaxy.Systems)) {
 		return fmt.Errorf("system with ID %d not found", fleetCreation.SystemId)
 	}
-
-	AddFleetToSystem(
-		galaxy,
-		fleetCreation.SystemId,
-		NewFleet(
+	fleet := NewFleet(
 			fleetCreation.FleetId,
 			fleetCreation.Owner,
 			fleetCreation.Attack,
+			fleetCreation.Exattack,
 			fleetCreation.Health,
-		),
+			fleetCreation.Evasion,
+			fleetCreation.Armor,
+			&pb.FleetComposition{
+				Destroyers: 1,
+			},
+		)
+	AddFleetToSystem(
+		galaxy,
+		fleetCreation.SystemId,
+		fleet,
 	)
+	log.Printf("bruh: %d", fleet.Evasion)
 	return nil
 }
 

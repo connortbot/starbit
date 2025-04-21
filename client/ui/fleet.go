@@ -34,37 +34,48 @@ func renderHealthBar(current, max int32, width int) string {
 func RenderFleet(fleet *pb.Fleet, width int) string {
 	var s strings.Builder
 	idText := fmt.Sprintf("Fleet ID: %d", fleet.Id)
-	s.WriteString(boldStyle.Render(idText) + "\n\n")
-
-	healthBar := renderHealthBar(fleet.Health, 100, width-4)
-	s.WriteString(fmt.Sprintf("HP: %s %d\n\n", healthBar, fleet.Health))
 
 	ownerBox := fmt.Sprintf("Owner: %s", fleet.Owner)
-	atkInfo := fmt.Sprintf("Attack: %d", fleet.Attack)
-	s.WriteString(sideBySideBoxes(4, ownerBox, atkInfo))
+	s.WriteString(sideBySideBoxes(2, boldStyle.Render(idText), ownerBox))
+	s.WriteString("\n")	
+	healthInfo := fmt.Sprintf("%d/%d", fleet.Health, fleet.MaxHealth)
+	healthBar := renderHealthBar(fleet.Health, fleet.MaxHealth, width-(2 + len(healthInfo)))
+	s.WriteString(fmt.Sprintf("HP: %s %s\n\n", healthBar, healthInfo))
+
+	atkInfo := fmt.Sprintf("Atk: %d", fleet.Attack)
+	exatkInfo := fmt.Sprintf("ExAtk: %d", fleet.Exattack)
+	evasionInfo := fmt.Sprintf("Eva: %d%%", fleet.Evasion)
+	armorInfo := fmt.Sprintf("Arm: %d%%", fleet.Armor)
+	
+	s.WriteString(sideBySideBoxes(2, atkInfo, exatkInfo, evasionInfo, armorInfo))
 
 	return wrapInBox(s.String(), width, 0, "Fleet", TitleCenter, nil)
 }
 
 func RenderFleetWithLocation(fleet *pb.Fleet, location int32, width int, currentTickCount int32) string {
-	effectiveWidth := width - 4 // -4 for left and right borders and minimal padding
 
-	var fleetDisplay strings.Builder
-	idLocationText := fmt.Sprintf("Fleet ID: %d (Location: %d)", fleet.Id, location)
-	fleetDisplay.WriteString(boldStyle.Render(idLocationText) + "\n\n")
-
-	healthBar := renderHealthBar(fleet.Health, 100, effectiveWidth)
-	fleetDisplay.WriteString(fmt.Sprintf("HP: %s %d\n\n", healthBar, fleet.Health))
-
+	var fleetDisplay strings.Builder	
 	ownerBox := fmt.Sprintf("Owner: %s", fleet.Owner)
-	atkInfo := fmt.Sprintf("Attack: %d", fleet.Attack)
+	idLocationText := fmt.Sprintf("Fleet ID: %d (Location: %d) %s", fleet.Id, location, ownerBox)
+	fleetDisplay.WriteString(boldStyle.Render(idLocationText) + "\n\n")
+	
+	healthInfo := fmt.Sprintf("%d/%d", fleet.Health, fleet.MaxHealth)
+	healthBar := renderHealthBar(fleet.Health, fleet.MaxHealth, width-(2 + len(healthInfo)))
+	fleetDisplay.WriteString(fmt.Sprintf("HP: %s %s\n\n", healthBar, healthInfo))
+
+	atkInfo := fmt.Sprintf("Atk: %d", fleet.Attack)
+	exatkInfo := fmt.Sprintf("ExAtk: %d", fleet.Exattack)
+	evasionInfo := fmt.Sprintf("Eva: %d%%", fleet.Evasion)
+	armorInfo := fmt.Sprintf("Arm: %d%%", fleet.Armor)
+	
 	moveStatus := "READY"
 	if fleet.LastMovedTick > (currentTickCount - FLEET_MOVEMENT_COOLDOWN) {
 		ticksToWait := FLEET_MOVEMENT_COOLDOWN - (currentTickCount - fleet.LastMovedTick)
 		moveStatus = fmt.Sprintf("%d sols", ticksToWait)
 	}
 	lastMovedText := fmt.Sprintf("Move: %s", moveStatus)
-	fleetDisplay.WriteString(sideBySideBoxes(4, ownerBox, atkInfo, lastMovedText))
+	fleetDisplay.WriteString(sideBySideBoxes(2, atkInfo, exatkInfo, evasionInfo, armorInfo, lastMovedText))
+	
 	return wrapInBox(fleetDisplay.String(), width, 0, "Fleet", TitleCenter, nil)
 }
 

@@ -7,11 +7,6 @@ import (
 	fleets "starbit/server/game/fleets"
 )
 
-const (
-	StartingFleetHealth = 100
-	StartingFleetAttack = 1
-)
-
 func InitializeGalaxy(galaxy *pb.GalaxyState, players map[string]*pb.Player, generateFleetID func() int32) {
 	playerNames := make([]string, 0, len(players))
 	for name := range players {
@@ -23,8 +18,12 @@ func InitializeGalaxy(galaxy *pb.GalaxyState, players map[string]*pb.Player, gen
 	bottomLeftCornerIndex := galaxy.Width * (galaxy.Height - 1)
 	bottomRightCornerIndex := galaxy.Width*galaxy.Height - 1
 
-	p1Fleet := fleets.NewFleet(generateFleetID(), playerNames[0], StartingFleetAttack, StartingFleetHealth)
-	p2Fleet := fleets.NewFleet(generateFleetID(), playerNames[1], StartingFleetAttack, StartingFleetHealth)
+	basicComposition := &pb.FleetComposition{
+		Destroyers: 1,
+	}
+
+	p1Fleet := fleets.NewFleet(generateFleetID(), playerNames[0], fleets.StartingFleetAttack, fleets.StartingFleetExAttack, fleets.StartingFleetHealth, fleets.StartingFleetEvasion, fleets.StartingFleetArmor, basicComposition)
+	p2Fleet := fleets.NewFleet(generateFleetID(), playerNames[1], fleets.StartingFleetAttack, fleets.StartingFleetExAttack, fleets.StartingFleetHealth, fleets.StartingFleetEvasion, fleets.StartingFleetArmor, basicComposition)
 
 	if len(players) == 2 {
 		SetSystemOwner(galaxy, topLeftCornerIndex, playerNames[0])
@@ -32,7 +31,7 @@ func InitializeGalaxy(galaxy *pb.GalaxyState, players map[string]*pb.Player, gen
 		SetSystemOwner(galaxy, bottomRightCornerIndex, playerNames[1])
 		AddFleetToSystem(galaxy, bottomRightCornerIndex, p2Fleet)
 	} else if len(players) == 3 {
-		p3Fleet := fleets.NewFleet(generateFleetID(), playerNames[2], StartingFleetAttack, StartingFleetHealth)
+		p3Fleet := fleets.NewFleet(generateFleetID(), playerNames[2], fleets.StartingFleetAttack, fleets.StartingFleetExAttack, fleets.StartingFleetHealth, fleets.StartingFleetEvasion, fleets.StartingFleetArmor, basicComposition)
 		SetSystemOwner(galaxy, topLeftCornerIndex, playerNames[0])
 		AddFleetToSystem(galaxy, topLeftCornerIndex, p1Fleet)
 		SetSystemOwner(galaxy, topRightCornerIndex, playerNames[1])
@@ -40,8 +39,8 @@ func InitializeGalaxy(galaxy *pb.GalaxyState, players map[string]*pb.Player, gen
 		SetSystemOwner(galaxy, bottomLeftCornerIndex, playerNames[2])
 		AddFleetToSystem(galaxy, bottomLeftCornerIndex, p3Fleet)
 	} else if len(players) == 4 {
-		p3Fleet := fleets.NewFleet(generateFleetID(), playerNames[2], StartingFleetAttack, StartingFleetHealth)
-		p4Fleet := fleets.NewFleet(generateFleetID(), playerNames[3], StartingFleetAttack, StartingFleetHealth)
+		p3Fleet := fleets.NewFleet(generateFleetID(), playerNames[2], fleets.StartingFleetAttack, fleets.StartingFleetExAttack, fleets.StartingFleetHealth, fleets.StartingFleetEvasion, fleets.StartingFleetArmor, basicComposition)
+		p4Fleet := fleets.NewFleet(generateFleetID(), playerNames[3], fleets.StartingFleetAttack, fleets.StartingFleetExAttack, fleets.StartingFleetHealth, fleets.StartingFleetEvasion, fleets.StartingFleetArmor, basicComposition)
 		SetSystemOwner(galaxy, topLeftCornerIndex, playerNames[0])
 		AddFleetToSystem(galaxy, topLeftCornerIndex, p1Fleet)
 		SetSystemOwner(galaxy, topRightCornerIndex, playerNames[1])
@@ -129,7 +128,15 @@ func ExecuteBattle(galaxy *pb.GalaxyState, systemId int32) (bool, []*pb.HealthUp
 			enemyIndex := randomInt32(0, int32(len(groups.Enemy)))
 			enemyFleet := groups.Enemy[enemyIndex]
 
-			enemyFleet.Health -= fleet.Attack
+			// Phase A: Apply Attack
+			effectiveAtk := fleet.Attack * (1 - (enemyFleet.Armor / 100))
+			if randomInt32(0, 100) > enemyFleet.Evasion {
+				enemyFleet.Health -= effectiveAtk
+			}
+			
+			// Phase B: Apply ExAttack
+			effectiveExatk := fleet.Exattack * (1 - (enemyFleet.Armor / 100))
+			enemyFleet.Health -= effectiveExatk
 
 			if !slices.Contains(updatedFleets, enemyFleet) {
 				updatedFleets = append(updatedFleets, enemyFleet)

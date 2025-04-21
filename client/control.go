@@ -245,6 +245,7 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 				log.Printf("Processing command: %s", m.command)
 				data := game.CommandData{
 					FleetLocations: m.fleetLocations,
+					GalaxyRef: m.galaxy,
 				}
 				result := game.ParseCommand(m.udpClient, m.command, data)
 				if result.Success {
@@ -287,7 +288,6 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 		ui.InitializeEnemyColors(m.galaxy, m.username)
 		return m, nil
 	case *pb.TickMsg:
-		log.Printf("UDP Tick: %s", string(msg.Message))
 		m.tickCount = msg.TickCount
 		ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 		if len(msg.FleetMovements) > 0 {
@@ -366,7 +366,6 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 		if len(msg.GesUpdates) > 0 {
 			for _, update := range msg.GesUpdates {
 				if update.Owner == m.username {
-					log.Printf("Received GES update: %d (Rate: %d)", update.Amount, update.Rate)
 					m.gesAmount = update.Amount
 					m.gesRate = update.Rate
 				}
@@ -393,6 +392,25 @@ func (m model) HandleGame(msg tea.Msg) (model, tea.Cmd) {
 								ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 							}
 						}
+					}
+				}
+			}
+		}
+
+		if len(msg.FleetUpdates) > 0 {
+			for _, update := range msg.FleetUpdates {
+				log.Printf("Update: %v", update)
+				err := game.ProcessFleetUpdate(m.galaxy, update)
+				if err != nil {
+					log.Printf("Error processing fleet update: %v", err)
+				} else {
+					log.Printf("Fleet updated with ID %d in system %d",
+						update.FleetId, update.SystemId)
+					m.gameLogger.AddFleetUpdate(update)
+					
+					_, exists := m.fleetLocations[update.FleetId]
+					if exists && m.fleetList != nil {
+						ui.UpdateFleetListWindow(m.fleetList, m.ownedFleets, m.fleetLocations, ui.FleetListWidth, m.tickCount)
 					}
 				}
 			}
