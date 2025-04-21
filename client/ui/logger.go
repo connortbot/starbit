@@ -45,6 +45,12 @@ func (l *GameLogger) AddFleetCreation(creation *pb.FleetCreation) {
 	l.addMessage(message)
 }
 
+func (l *GameLogger) AddFleetUpdate(update *pb.FleetUpdate) {
+	timestamp := time.Now().Format("15:04:05")
+	message := fmt.Sprintf("[%s] %s updated fleet (ID: %d) in system %d", timestamp, update.Owner, update.FleetId, update.SystemId)
+	l.addMessage(message)
+}
+
 func (l *GameLogger) AddHealthUpdate(update *pb.HealthUpdate) {
 	timestamp := time.Now().Format("15:04:05")
 	message := fmt.Sprintf("[%s] Fleet %d health is now %d in system %d",

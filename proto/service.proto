@@ -89,13 +89,16 @@ message TickMsg {
   repeated GESUpdate gesUpdates = 6;
   repeated FleetCreation fleetCreations = 7;
   repeated FleetModification fleetModifications = 8;
-  GameVictory victory = 9;
-  int32 tickCount = 10;
+  repeated FleetUpdate fleetUpdates = 9;
+  GameVictory victory = 10;
+  int32 tickCount = 11;
 }
 
 message FleetModification {
   int32 fleetId = 1;
-  FleetComposition composition = 2;
+  int32 systemId = 2;
+  string owner = 3;
+  FleetComposition composition = 4;
 }
 
 message FleetMovement {
@@ -108,6 +111,21 @@ message HealthUpdate {
   int32 fleetId = 1;
   int32 health = 2;
   int32 systemId = 3;
+}
+
+message FleetUpdate {
+  int32 fleetId = 1;
+  int32 systemId = 2;
+  
+  int32 maxHealth = 3;
+  int32 health = 4;
+  int32 attack = 5;
+  int32 evasion = 6;
+  int32 armor = 7;
+  int32 exattack = 8;
+  
+  FleetComposition composition = 9;
+  string owner = 10;
 }
 
 message FleetDestroyed {

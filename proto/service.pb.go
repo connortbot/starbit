@@ -717,8 +717,9 @@ type TickMsg struct {
 	GesUpdates         []*GESUpdate           `protobuf:"bytes,6,rep,name=gesUpdates,proto3" json:"gesUpdates,omitempty"`
 	FleetCreations     []*FleetCreation       `protobuf:"bytes,7,rep,name=fleetCreations,proto3" json:"fleetCreations,omitempty"`
 	FleetModifications []*FleetModification   `protobuf:"bytes,8,rep,name=fleetModifications,proto3" json:"fleetModifications,omitempty"`
-	Victory            *GameVictory           `protobuf:"bytes,9,opt,name=victory,proto3" json:"victory,omitempty"`
-	TickCount          int32                  `protobuf:"varint,10,opt,name=tickCount,proto3" json:"tickCount,omitempty"`
+	FleetUpdates       []*FleetUpdate         `protobuf:"bytes,9,rep,name=fleetUpdates,proto3" json:"fleetUpdates,omitempty"`
+	Victory            *GameVictory           `protobuf:"bytes,10,opt,name=victory,proto3" json:"victory,omitempty"`
+	TickCount          int32                  `protobuf:"varint,11,opt,name=tickCount,proto3" json:"tickCount,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -809,6 +810,13 @@ func (x *TickMsg) GetFleetModifications() []*FleetModification {
 	return nil
 }
 
+func (x *TickMsg) GetFleetUpdates() []*FleetUpdate {
+	if x != nil {
+		return x.FleetUpdates
+	}
+	return nil
+}
+
 func (x *TickMsg) GetVictory() *GameVictory {
 	if x != nil {
 		return x.Victory
@@ -826,7 +834,9 @@ func (x *TickMsg) GetTickCount() int32 {
 type FleetModification struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FleetId       int32                  `protobuf:"varint,1,opt,name=fleetId,proto3" json:"fleetId,omitempty"`
-	Composition   *FleetComposition      `protobuf:"bytes,2,opt,name=composition,proto3" json:"composition,omitempty"`
+	SystemId      int32                  `protobuf:"varint,2,opt,name=systemId,proto3" json:"systemId,omitempty"`
+	Owner         string                 `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+	Composition   *FleetComposition      `protobuf:"bytes,4,opt,name=composition,proto3" json:"composition,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -866,6 +876,20 @@ func (x *FleetModification) GetFleetId() int32 {
 		return x.FleetId
 	}
 	return 0
+}
+
+func (x *FleetModification) GetSystemId() int32 {
+	if x != nil {
+		return x.SystemId
+	}
+	return 0
+}
+
+func (x *FleetModification) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
 }
 
 func (x *FleetModification) GetComposition() *FleetComposition {
@@ -995,6 +1019,122 @@ func (x *HealthUpdate) GetSystemId() int32 {
 	return 0
 }
 
+type FleetUpdate struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FleetId       int32                  `protobuf:"varint,1,opt,name=fleetId,proto3" json:"fleetId,omitempty"`
+	SystemId      int32                  `protobuf:"varint,2,opt,name=systemId,proto3" json:"systemId,omitempty"`
+	MaxHealth     int32                  `protobuf:"varint,3,opt,name=maxHealth,proto3" json:"maxHealth,omitempty"`
+	Health        int32                  `protobuf:"varint,4,opt,name=health,proto3" json:"health,omitempty"`
+	Attack        int32                  `protobuf:"varint,5,opt,name=attack,proto3" json:"attack,omitempty"`
+	Evasion       int32                  `protobuf:"varint,6,opt,name=evasion,proto3" json:"evasion,omitempty"`
+	Armor         int32                  `protobuf:"varint,7,opt,name=armor,proto3" json:"armor,omitempty"`
+	Exattack      int32                  `protobuf:"varint,8,opt,name=exattack,proto3" json:"exattack,omitempty"`
+	Composition   *FleetComposition      `protobuf:"bytes,9,opt,name=composition,proto3" json:"composition,omitempty"`
+	Owner         string                 `protobuf:"bytes,10,opt,name=owner,proto3" json:"owner,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FleetUpdate) Reset() {
+	*x = FleetUpdate{}
+	mi := &file_proto_service_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FleetUpdate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FleetUpdate) ProtoMessage() {}
+
+func (x *FleetUpdate) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_service_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FleetUpdate.ProtoReflect.Descriptor instead.
+func (*FleetUpdate) Descriptor() ([]byte, []int) {
+	return file_proto_service_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *FleetUpdate) GetFleetId() int32 {
+	if x != nil {
+		return x.FleetId
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetSystemId() int32 {
+	if x != nil {
+		return x.SystemId
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetMaxHealth() int32 {
+	if x != nil {
+		return x.MaxHealth
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetHealth() int32 {
+	if x != nil {
+		return x.Health
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetAttack() int32 {
+	if x != nil {
+		return x.Attack
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetEvasion() int32 {
+	if x != nil {
+		return x.Evasion
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetArmor() int32 {
+	if x != nil {
+		return x.Armor
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetExattack() int32 {
+	if x != nil {
+		return x.Exattack
+	}
+	return 0
+}
+
+func (x *FleetUpdate) GetComposition() *FleetComposition {
+	if x != nil {
+		return x.Composition
+	}
+	return nil
+}
+
+func (x *FleetUpdate) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
 type FleetDestroyed struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FleetId       int32                  `protobuf:"varint,1,opt,name=fleetId,proto3" json:"fleetId,omitempty"`
@@ -1005,7 +1145,7 @@ type FleetDestroyed struct {
 
 func (x *FleetDestroyed) Reset() {
 	*x = FleetDestroyed{}
-	mi := &file_proto_service_proto_msgTypes[15]
+	mi := &file_proto_service_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1017,7 +1157,7 @@ func (x *FleetDestroyed) String() string {
 func (*FleetDestroyed) ProtoMessage() {}
 
 func (x *FleetDestroyed) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[15]
+	mi := &file_proto_service_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1030,7 +1170,7 @@ func (x *FleetDestroyed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FleetDestroyed.ProtoReflect.Descriptor instead.
 func (*FleetDestroyed) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{15}
+	return file_proto_service_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *FleetDestroyed) GetFleetId() int32 {
@@ -1057,7 +1197,7 @@ type SystemOwnerChange struct {
 
 func (x *SystemOwnerChange) Reset() {
 	*x = SystemOwnerChange{}
-	mi := &file_proto_service_proto_msgTypes[16]
+	mi := &file_proto_service_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1069,7 +1209,7 @@ func (x *SystemOwnerChange) String() string {
 func (*SystemOwnerChange) ProtoMessage() {}
 
 func (x *SystemOwnerChange) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[16]
+	mi := &file_proto_service_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1082,7 +1222,7 @@ func (x *SystemOwnerChange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SystemOwnerChange.ProtoReflect.Descriptor instead.
 func (*SystemOwnerChange) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{16}
+	return file_proto_service_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *SystemOwnerChange) GetSystemId() int32 {
@@ -1110,7 +1250,7 @@ type GESUpdate struct {
 
 func (x *GESUpdate) Reset() {
 	*x = GESUpdate{}
-	mi := &file_proto_service_proto_msgTypes[17]
+	mi := &file_proto_service_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1122,7 +1262,7 @@ func (x *GESUpdate) String() string {
 func (*GESUpdate) ProtoMessage() {}
 
 func (x *GESUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[17]
+	mi := &file_proto_service_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1135,7 +1275,7 @@ func (x *GESUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GESUpdate.ProtoReflect.Descriptor instead.
 func (*GESUpdate) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{17}
+	return file_proto_service_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GESUpdate) GetOwner() string {
@@ -1176,7 +1316,7 @@ type FleetCreation struct {
 
 func (x *FleetCreation) Reset() {
 	*x = FleetCreation{}
-	mi := &file_proto_service_proto_msgTypes[18]
+	mi := &file_proto_service_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1188,7 +1328,7 @@ func (x *FleetCreation) String() string {
 func (*FleetCreation) ProtoMessage() {}
 
 func (x *FleetCreation) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[18]
+	mi := &file_proto_service_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1201,7 +1341,7 @@ func (x *FleetCreation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FleetCreation.ProtoReflect.Descriptor instead.
 func (*FleetCreation) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{18}
+	return file_proto_service_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *FleetCreation) GetSystemId() int32 {
@@ -1276,7 +1416,7 @@ type GameVictory struct {
 
 func (x *GameVictory) Reset() {
 	*x = GameVictory{}
-	mi := &file_proto_service_proto_msgTypes[19]
+	mi := &file_proto_service_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1288,7 +1428,7 @@ func (x *GameVictory) String() string {
 func (*GameVictory) ProtoMessage() {}
 
 func (x *GameVictory) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_service_proto_msgTypes[19]
+	mi := &file_proto_service_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1301,7 +1441,7 @@ func (x *GameVictory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GameVictory.ProtoReflect.Descriptor instead.
 func (*GameVictory) Descriptor() ([]byte, []int) {
-	return file_proto_service_proto_rawDescGZIP(), []int{19}
+	return file_proto_service_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GameVictory) GetWinner() string {
@@ -1375,7 +1515,7 @@ const file_proto_service_proto_rawDesc = "" +
 	"destroyers\x12\x1a\n" +
 	"\bcruisers\x18\x02 \x01(\x05R\bcruisers\x12 \n" +
 	"\vbattleships\x18\x03 \x01(\x05R\vbattleships\x12\"\n" +
-	"\fdreadnoughts\x18\x04 \x01(\x05R\fdreadnoughts\"\xab\x04\n" +
+	"\fdreadnoughts\x18\x04 \x01(\x05R\fdreadnoughts\"\xe3\x04\n" +
 	"\aTickMsg\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12<\n" +
 	"\x0efleetMovements\x18\x02 \x03(\v2\x14.proto.FleetMovementR\x0efleetMovements\x129\n" +
@@ -1386,13 +1526,16 @@ const file_proto_service_proto_rawDesc = "" +
 	"gesUpdates\x18\x06 \x03(\v2\x10.proto.GESUpdateR\n" +
 	"gesUpdates\x12<\n" +
 	"\x0efleetCreations\x18\a \x03(\v2\x14.proto.FleetCreationR\x0efleetCreations\x12H\n" +
-	"\x12fleetModifications\x18\b \x03(\v2\x18.proto.FleetModificationR\x12fleetModifications\x12,\n" +
-	"\avictory\x18\t \x01(\v2\x12.proto.GameVictoryR\avictory\x12\x1c\n" +
-	"\ttickCount\x18\n" +
-	" \x01(\x05R\ttickCount\"h\n" +
+	"\x12fleetModifications\x18\b \x03(\v2\x18.proto.FleetModificationR\x12fleetModifications\x126\n" +
+	"\ffleetUpdates\x18\t \x03(\v2\x12.proto.FleetUpdateR\ffleetUpdates\x12,\n" +
+	"\avictory\x18\n" +
+	" \x01(\v2\x12.proto.GameVictoryR\avictory\x12\x1c\n" +
+	"\ttickCount\x18\v \x01(\x05R\ttickCount\"\x9a\x01\n" +
 	"\x11FleetModification\x12\x18\n" +
-	"\afleetId\x18\x01 \x01(\x05R\afleetId\x129\n" +
-	"\vcomposition\x18\x02 \x01(\v2\x17.proto.FleetCompositionR\vcomposition\"m\n" +
+	"\afleetId\x18\x01 \x01(\x05R\afleetId\x12\x1a\n" +
+	"\bsystemId\x18\x02 \x01(\x05R\bsystemId\x12\x14\n" +
+	"\x05owner\x18\x03 \x01(\tR\x05owner\x129\n" +
+	"\vcomposition\x18\x04 \x01(\v2\x17.proto.FleetCompositionR\vcomposition\"m\n" +
 	"\rFleetMovement\x12\x18\n" +
 	"\afleetId\x18\x01 \x01(\x05R\afleetId\x12\"\n" +
 	"\ffromSystemId\x18\x02 \x01(\x05R\ffromSystemId\x12\x1e\n" +
@@ -1402,7 +1545,19 @@ const file_proto_service_proto_rawDesc = "" +
 	"\fHealthUpdate\x12\x18\n" +
 	"\afleetId\x18\x01 \x01(\x05R\afleetId\x12\x16\n" +
 	"\x06health\x18\x02 \x01(\x05R\x06health\x12\x1a\n" +
-	"\bsystemId\x18\x03 \x01(\x05R\bsystemId\"F\n" +
+	"\bsystemId\x18\x03 \x01(\x05R\bsystemId\"\xae\x02\n" +
+	"\vFleetUpdate\x12\x18\n" +
+	"\afleetId\x18\x01 \x01(\x05R\afleetId\x12\x1a\n" +
+	"\bsystemId\x18\x02 \x01(\x05R\bsystemId\x12\x1c\n" +
+	"\tmaxHealth\x18\x03 \x01(\x05R\tmaxHealth\x12\x16\n" +
+	"\x06health\x18\x04 \x01(\x05R\x06health\x12\x16\n" +
+	"\x06attack\x18\x05 \x01(\x05R\x06attack\x12\x18\n" +
+	"\aevasion\x18\x06 \x01(\x05R\aevasion\x12\x14\n" +
+	"\x05armor\x18\a \x01(\x05R\x05armor\x12\x1a\n" +
+	"\bexattack\x18\b \x01(\x05R\bexattack\x129\n" +
+	"\vcomposition\x18\t \x01(\v2\x17.proto.FleetCompositionR\vcomposition\x12\x14\n" +
+	"\x05owner\x18\n" +
+	" \x01(\tR\x05owner\"F\n" +
 	"\x0eFleetDestroyed\x12\x18\n" +
 	"\afleetId\x18\x01 \x01(\x05R\afleetId\x12\x1a\n" +
 	"\bsystemId\x18\x02 \x01(\x05R\bsystemId\"E\n" +
@@ -1441,7 +1596,7 @@ func file_proto_service_proto_rawDescGZIP() []byte {
 	return file_proto_service_proto_rawDescData
 }
 
-var file_proto_service_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_proto_service_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_proto_service_proto_goTypes = []any{
 	(*Empty)(nil),             // 0: proto.Empty
 	(*JoinRequest)(nil),       // 1: proto.JoinRequest
@@ -1458,46 +1613,49 @@ var file_proto_service_proto_goTypes = []any{
 	(*FleetModification)(nil), // 12: proto.FleetModification
 	(*FleetMovement)(nil),     // 13: proto.FleetMovement
 	(*HealthUpdate)(nil),      // 14: proto.HealthUpdate
-	(*FleetDestroyed)(nil),    // 15: proto.FleetDestroyed
-	(*SystemOwnerChange)(nil), // 16: proto.SystemOwnerChange
-	(*GESUpdate)(nil),         // 17: proto.GESUpdate
-	(*FleetCreation)(nil),     // 18: proto.FleetCreation
-	(*GameVictory)(nil),       // 19: proto.GameVictory
-	nil,                       // 20: proto.JoinResponse.PlayersEntry
-	nil,                       // 21: proto.GameState.PlayersEntry
-	nil,                       // 22: proto.GameUpdate.PlayersEntry
+	(*FleetUpdate)(nil),       // 15: proto.FleetUpdate
+	(*FleetDestroyed)(nil),    // 16: proto.FleetDestroyed
+	(*SystemOwnerChange)(nil), // 17: proto.SystemOwnerChange
+	(*GESUpdate)(nil),         // 18: proto.GESUpdate
+	(*FleetCreation)(nil),     // 19: proto.FleetCreation
+	(*GameVictory)(nil),       // 20: proto.GameVictory
+	nil,                       // 21: proto.JoinResponse.PlayersEntry
+	nil,                       // 22: proto.GameState.PlayersEntry
+	nil,                       // 23: proto.GameUpdate.PlayersEntry
 }
 var file_proto_service_proto_depIdxs = []int32{
-	20, // 0: proto.JoinResponse.players:type_name -> proto.JoinResponse.PlayersEntry
+	21, // 0: proto.JoinResponse.players:type_name -> proto.JoinResponse.PlayersEntry
 	6,  // 1: proto.JoinResponse.galaxy:type_name -> proto.GalaxyState
 	9,  // 2: proto.System.fleets:type_name -> proto.Fleet
 	5,  // 3: proto.GalaxyState.systems:type_name -> proto.System
-	21, // 4: proto.GameState.players:type_name -> proto.GameState.PlayersEntry
-	22, // 5: proto.GameUpdate.players:type_name -> proto.GameUpdate.PlayersEntry
+	22, // 4: proto.GameState.players:type_name -> proto.GameState.PlayersEntry
+	23, // 5: proto.GameUpdate.players:type_name -> proto.GameUpdate.PlayersEntry
 	6,  // 6: proto.GameUpdate.galaxy:type_name -> proto.GalaxyState
 	10, // 7: proto.Fleet.composition:type_name -> proto.FleetComposition
 	13, // 8: proto.TickMsg.fleetMovements:type_name -> proto.FleetMovement
 	14, // 9: proto.TickMsg.healthUpdates:type_name -> proto.HealthUpdate
-	15, // 10: proto.TickMsg.fleetDestroyed:type_name -> proto.FleetDestroyed
-	16, // 11: proto.TickMsg.systemOwnerChanges:type_name -> proto.SystemOwnerChange
-	17, // 12: proto.TickMsg.gesUpdates:type_name -> proto.GESUpdate
-	18, // 13: proto.TickMsg.fleetCreations:type_name -> proto.FleetCreation
+	16, // 10: proto.TickMsg.fleetDestroyed:type_name -> proto.FleetDestroyed
+	17, // 11: proto.TickMsg.systemOwnerChanges:type_name -> proto.SystemOwnerChange
+	18, // 12: proto.TickMsg.gesUpdates:type_name -> proto.GESUpdate
+	19, // 13: proto.TickMsg.fleetCreations:type_name -> proto.FleetCreation
 	12, // 14: proto.TickMsg.fleetModifications:type_name -> proto.FleetModification
-	19, // 15: proto.TickMsg.victory:type_name -> proto.GameVictory
-	10, // 16: proto.FleetModification.composition:type_name -> proto.FleetComposition
-	10, // 17: proto.FleetCreation.composition:type_name -> proto.FleetComposition
-	4,  // 18: proto.JoinResponse.PlayersEntry.value:type_name -> proto.Player
-	4,  // 19: proto.GameState.PlayersEntry.value:type_name -> proto.Player
-	4,  // 20: proto.GameUpdate.PlayersEntry.value:type_name -> proto.Player
-	1,  // 21: proto.Game.JoinGame:input_type -> proto.JoinRequest
-	3,  // 22: proto.Game.MaintainConnection:input_type -> proto.ConnectionRequest
-	2,  // 23: proto.Game.JoinGame:output_type -> proto.JoinResponse
-	8,  // 24: proto.Game.MaintainConnection:output_type -> proto.GameUpdate
-	23, // [23:25] is the sub-list for method output_type
-	21, // [21:23] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	15, // 15: proto.TickMsg.fleetUpdates:type_name -> proto.FleetUpdate
+	20, // 16: proto.TickMsg.victory:type_name -> proto.GameVictory
+	10, // 17: proto.FleetModification.composition:type_name -> proto.FleetComposition
+	10, // 18: proto.FleetUpdate.composition:type_name -> proto.FleetComposition
+	10, // 19: proto.FleetCreation.composition:type_name -> proto.FleetComposition
+	4,  // 20: proto.JoinResponse.PlayersEntry.value:type_name -> proto.Player
+	4,  // 21: proto.GameState.PlayersEntry.value:type_name -> proto.Player
+	4,  // 22: proto.GameUpdate.PlayersEntry.value:type_name -> proto.Player
+	1,  // 23: proto.Game.JoinGame:input_type -> proto.JoinRequest
+	3,  // 24: proto.Game.MaintainConnection:input_type -> proto.ConnectionRequest
+	2,  // 25: proto.Game.JoinGame:output_type -> proto.JoinResponse
+	8,  // 26: proto.Game.MaintainConnection:output_type -> proto.GameUpdate
+	25, // [25:27] is the sub-list for method output_type
+	23, // [23:25] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_proto_service_proto_init() }
@@ -1511,7 +1669,7 @@ func file_proto_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_service_proto_rawDesc), len(file_proto_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

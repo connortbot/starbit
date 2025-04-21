@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"log"
 	pb "starbit/proto"
 )
 
@@ -113,6 +114,28 @@ func AddFleetToSystem(galaxy *pb.GalaxyState, systemId int32, fleet *pb.Fleet) e
 	galaxy.Systems[systemId].Fleets = append(galaxy.Systems[systemId].Fleets, fleet)
 	return nil
 }
+
+
+
+
+func ProcessFleetUpdate(galaxy *pb.GalaxyState, fleetUpdate *pb.FleetUpdate) error {
+	
+	if fleetUpdate.SystemId < 0 || fleetUpdate.SystemId >= int32(len(galaxy.Systems)) {
+		return fmt.Errorf("system with ID %d not found", fleetUpdate.SystemId)
+	}
+	
+	fleet := GetFleet(galaxy, fleetUpdate.SystemId, fleetUpdate.FleetId)
+	fleet.Health = fleetUpdate.Health
+	fleet.MaxHealth = fleetUpdate.MaxHealth
+	fleet.Attack = fleetUpdate.Attack
+	fleet.Exattack = fleetUpdate.Exattack
+	fleet.Evasion = fleetUpdate.Evasion
+	fleet.Armor = fleetUpdate.Armor
+	log.Printf("Fleet Update and Composition: %v %v", fleetUpdate, fleetUpdate.Composition)
+	fleet.Composition = fleetUpdate.Composition
+
+	return nil
+} 
 
 
 func ProcessFleetCreation(galaxy *pb.GalaxyState, fleetCreation *pb.FleetCreation) error {
