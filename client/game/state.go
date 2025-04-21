@@ -103,6 +103,8 @@ func NewFleet(fleetId int32, owner string, attack int32, exattack int32, health 
 		Exattack: exattack,
 		Health: health,
 		MaxHealth: health,
+		Evasion: evasion,
+		Armor: armor,
 		Composition: composition,
 	}
 }
@@ -142,11 +144,7 @@ func ProcessFleetCreation(galaxy *pb.GalaxyState, fleetCreation *pb.FleetCreatio
 	if fleetCreation.SystemId < 0 || fleetCreation.SystemId >= int32(len(galaxy.Systems)) {
 		return fmt.Errorf("system with ID %d not found", fleetCreation.SystemId)
 	}
-
-	AddFleetToSystem(
-		galaxy,
-		fleetCreation.SystemId,
-		NewFleet(
+	fleet := NewFleet(
 			fleetCreation.FleetId,
 			fleetCreation.Owner,
 			fleetCreation.Attack,
@@ -157,8 +155,13 @@ func ProcessFleetCreation(galaxy *pb.GalaxyState, fleetCreation *pb.FleetCreatio
 			&pb.FleetComposition{
 				Destroyers: 1,
 			},
-		),
+		)
+	AddFleetToSystem(
+		galaxy,
+		fleetCreation.SystemId,
+		fleet,
 	)
+	log.Printf("bruh: %d", fleet.Evasion)
 	return nil
 }
 
