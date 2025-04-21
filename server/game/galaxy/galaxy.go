@@ -128,7 +128,15 @@ func ExecuteBattle(galaxy *pb.GalaxyState, systemId int32) (bool, []*pb.HealthUp
 			enemyIndex := randomInt32(0, int32(len(groups.Enemy)))
 			enemyFleet := groups.Enemy[enemyIndex]
 
-			enemyFleet.Health -= fleet.Attack
+			// Phase A: Apply Attack
+			effectiveAtk := fleet.Attack * (1 - (enemyFleet.Armor / 100))
+			if randomInt32(0, 100) > enemyFleet.Evasion {
+				enemyFleet.Health -= effectiveAtk
+			}
+			
+			// Phase B: Apply ExAttack
+			effectiveExatk := fleet.Exattack * (1 - (enemyFleet.Armor / 100))
+			enemyFleet.Health -= effectiveExatk
 
 			if !slices.Contains(updatedFleets, enemyFleet) {
 				updatedFleets = append(updatedFleets, enemyFleet)
