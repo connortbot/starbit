@@ -357,3 +357,43 @@ The resulting game ended having a surprising amount of depth for the minor natur
 The next thing to do in `v0.03` and `v0.04` would be to add *more combat depth and a supply system to make overscaling difficult*. After that, the game is pretty much done!
 ![v0.02](./screenshots/07.png)
 ![v0.02](./screenshots/08.png)
+
+## `v0.03` Update
+I'm back! After the v0.02 update, I had achieved my goal of making a working space strategy game fully in the terminal. But then I got a bout of excitement to work on this again, so I figured now was the time to add some depth with the **Combat Update**.
+
+In `v0.02`, the biggest flaw was that there was no depth to the combat other than positioning and timing. I wanted to incentivize people to think about the *composition* of their fleets! At this point, I had already added this to the *Future Updates* list anyways.
+
+The original goal was to create a sort of 'rock-paper-scissors' dynamic. I had already come up with our four ship types: Destroyer, Cruiser, Battleship, Dreadnought. But, I wanted to a strike a strategic balance where, yes, having the most resources and territory HELPS, but strategic fleet building can overcome deficits.
+
+A good system will achieve the following:
+- Cheaper to upgrade/modify fleets than it is to create new ones. This incentivizes have just a few fleets, making it less of a typing speed game and more of a strategy game.
+- Every playstyle should have counterplay. Every fleet should have some way where a cheaper fleet can beat it.
+
+The final mechanic:
+- Each fleet is composed of Destroyers, Cruisers, Battleships, Dreadnoughts
+- Add new stats Explosive Attack (Exattack), Evasion, and Armor.
+- High cost to make new fleet, and charge GES to add a new ship to a fleet.
+
+| Stat | Calculated With... | Boosted by |
+|-|-|-|
+| Health | Sum | Dreadnought > Battleship > Cruiser > Destroyer |
+| Attack | Sum | Battleship > Dreadnought > Destroyer > Cruiser |
+| ExAttack | Sum | Dreadnought > Battleship = Cruister > Destroyer |
+| Evasion | % Avg | Destroyer > Cruiser > Battleship > Dreadnought |
+| Armor | % Avg | Dreadnought > Battleship > Cruiser > Destroyer |
+
+- Evasion is a percentage chance to avoid Attack
+- Armor is damage reduction against both types ExAttack and Attack
+
+I came up with the first set of stats:
+| Ship | Cost | Health | Attack | Ex Attack | Evasion | Armor |
+|-|-|-|-|-|-|-|
+| Destroyer | 250 GES | 50 | 2 | 1 | 35% | 5% |
+| Cruiser |  350 GES | 75 | 1 | 2 | 20% | 15% |
+| Battleship | 800 GES | 200 | 5 | 2 | 10% | 30% |
+| Dreadnought | 1500 GES | 600 | 3 | 5 | 5% | 40% |
+
+**The Cycle(?):** Destroyer > Battleship > Cruiser > Dreadnought > Destroyer
+
+Now that its implemented, its time to test.
+
