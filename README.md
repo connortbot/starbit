@@ -79,10 +79,10 @@ You'll need:
    sudo sysctl -p
    
    # Download the executable directly to the server
-   curl -L https://github.com/connortbot/starbit/releases/download/v0.02/starbit-server-linux -o ~/starbit/starbit-server
+   curl -L https://github.com/connortbot/starbit/releases/download/v0.03/starbit-server-linux -o ~/starbit/starbit-server
    
    # Or alternatively with wget:
-   # wget https://github.com/connortbot/starbit/releases/download/v0.02/starbit-server-linux -O ~/starbit/starbit-server
+   # wget https://github.com/connortbot/starbit/releases/download/v0.03/starbit-server-linux -O ~/starbit/starbit-server
 
    # To run with a specific amoutn of players (max 4)
    ~/starbit/starbit-server -maxPlayers=2
